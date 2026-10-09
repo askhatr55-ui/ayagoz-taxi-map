@@ -3,7 +3,7 @@
 const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
-const ini'tSqlJs = require('sql.js');
+const initSqlJs = require('sql.js');
 
 const PORT = Number(process.env.PORT) || 3000;
 const ROOT = __dirname;
