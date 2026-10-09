@@ -10,7 +10,7 @@ async function start() {
   });
 
   const db = new SQL.Database(
-    new Uint8Array(fs.readFileSync("./ayagoz.mbtiles"))
+    new Uint8Array(fs.readFileSync("./ayagoz-v3.mbtiles"))
   );
 
   const html = `<!DOCTYPE html>
