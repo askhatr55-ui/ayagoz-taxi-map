@@ -1,11 +1,15 @@
 {
   "name": "ayagoz-taxi-map",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "private": true,
   "scripts": {
     "start": "node server.js",
     "check": "node --check server.js"
   },
-  "engines": { "node": ">=20" },
-  "dependencies": { "sql.js": "^1.13.0" }
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "sql.js": "^1.13.0"
+  }
 }
