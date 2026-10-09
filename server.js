@@ -9,7 +9,7 @@ const PORT = Number(process.env.PORT) || 3000;
 const ROOT = __dirname;
 const MBTILES_PATH = path.join(ROOT, 'ayagoz.mbtiles');
 const SEARCH_PATH = path.join(ROOT, 'addresses.json');
-const VERSION = 'ayagoz-v2';
+const VERSION = 'ayagoz-v3';
 
 function reply(res, code, type, content, cache = 'no-store') {
   res.writeHead(code, {
