@@ -33,7 +33,7 @@ function roadWidth(a, b, c, d) {
   ];
 }
 
-function makeStyle(origin, minzoom, maxzoom, version, available) {
+function makeStyle(origin, minzoom, maxzoom, version, available, bounds) {
   const layers = [];
   const source = 'ayagoz';
 
@@ -386,7 +386,7 @@ function makeStyle(origin, minzoom, maxzoom, version, available) {
         ],
         minzoom,
         maxzoom,
-        bounds: CITY_BOUNDS,
+        bounds,
         attribution:
           '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>'
       }
@@ -566,13 +566,15 @@ button.active {
     style: '/style.json',
     center: [80.4366, 47.96512],
     zoom: 14,
-    minZoom: 10,
-    maxZoom: 19,
-    maxBounds: [
-      [80.29, 47.89],
-      [80.56, 48.06]
-    ]
+    minZoom: 0,
+    maxZoom: 19
   });
+
+  // Обновляем размеры canvas при изменении размера контейнера.
+  if (window.ResizeObserver) {
+    new ResizeObserver(function () { map.resize(); })
+      .observe(document.getElementById('map'));
+  }
 
   map.addControl(
     new maplibregl.NavigationControl(),
@@ -862,8 +864,23 @@ async function start() {
 
   const zooms = zoomCounts ? zoomCounts.values : [];
 
-  const minzoom = Number(metadata.minzoom || 10);
-  const maxzoom = Number(metadata.maxzoom || 14);
+  if (!zooms.length) throw new Error('В MBTiles нет тайлов');
+  // Метаданные могут устареть: используем реальный диапазон таблицы tiles.
+  const minzoom = Number(zooms[0][0]);
+  const maxzoom = Number(zooms[zooms.length - 1][0]);
+  // Полные границы покрытия по тайлам на самом подробном масштабе.
+  const extent = db.exec(
+    'SELECT MIN(tile_column), MAX(tile_column), MIN(tile_row), MAX(tile_row) ' +
+    'FROM tiles WHERE zoom_level=' + maxzoom
+  )[0].values[0];
+  const n = 2 ** maxzoom;
+  const latitude = row => Math.atan(Math.sinh(Math.PI * (1 - 2 * row / n))) * 180 / Math.PI;
+  const bounds = [
+    extent[0] / n * 360 - 180,
+    latitude(n - extent[2]),
+    (extent[1] + 1) / n * 360 - 180,
+    latitude(n - 1 - extent[3])
+  ];
 
   let layerInfo = [];
 
@@ -923,6 +940,7 @@ async function start() {
             maxzoom,
             layers: [...layerNames],
             perZoom: zooms,
+            bounds,
             searchIndex: fs.existsSync(INDEX_PATH)
           })
         );
@@ -955,7 +973,8 @@ async function start() {
               minzoom,
               maxzoom,
               version,
-              layerNames
+              layerNames,
+              bounds
             )
           )
         );
