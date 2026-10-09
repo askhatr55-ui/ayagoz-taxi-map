@@ -1,3 +1,4 @@
+
 'use strict';
 
 const http = require('node:http');
@@ -7,238 +8,1050 @@ const initSqlJs = require('sql.js');
 
 const PORT = Number(process.env.PORT) || 3000;
 const ROOT = __dirname;
-const MBTILES_PATH = path.join(ROOT, 'ayagoz.mbtiles');
-const SEARCH_PATH = path.join(ROOT, 'addresses.json');
-const VERSION = 'ayagoz-v3';
 
-function reply(res, code, type, content, cache = 'no-store') {
-  res.writeHead(code, {
+// Сначала ищем новую карту, затем резервную.
+const MAP_PATH = ['ayagoz-v3.mbtiles', 'ayagoz.mbtiles']
+  .map(name => path.join(ROOT, name))
+  .find(file => fs.existsSync(file));
+
+const INDEX_PATH = path.join(ROOT, 'addresses.json');
+const CITY_BOUNDS = [80.30, 47.90, 80.55, 48.05];
+
+function respond(res, status, type, body, cache = 'no-store') {
+  res.writeHead(status, {
     'Content-Type': type,
     'Cache-Control': cache,
     'Access-Control-Allow-Origin': '*'
   });
-  res.end(content);
+  res.end(body);
 }
 
-const roadsFilter = list => ['in', ['get', 'class'], ['literal', list]];
-const lineWidth = (low, high, extra) => ['interpolate', ['linear'], ['zoom'], 10, low, 14, high, 18, extra];
-const labelPaint = (color, haloWidth = 1.7) => ({
-  'text-color': color, 'text-halo-color': '#fff', 'text-halo-width': haloWidth
-});
-
-function roadLayer(id, classes, color, casing, low, mid, high) {
+function roadWidth(a, b, c, d) {
   return [
-    { id: id + '-edge', type: 'line', source: 'ayagoz', 'source-layer': 'roads',
-      filter: roadsFilter(classes),
-      layout: { 'line-join': 'round', 'line-cap': 'round' },
-      paint: { 'line-color': casing, 'line-width': lineWidth(low + 1.5, mid + 2.4, high + 3) } },
-    { id, type: 'line', source: 'ayagoz', 'source-layer': 'roads',
-      filter: roadsFilter(classes),
-      layout: { 'line-join': 'round', 'line-cap': 'round' },
-      paint: { 'line-color': color, 'line-width': lineWidth(low, mid, high) } }
+    'interpolate', ['linear'], ['zoom'],
+    10, a, 14, b, 16, c, 19, d
   ];
 }
 
-function style(origin, minzoom, maxzoom) {
+function makeStyle(origin, minzoom, maxzoom, version, available) {
+  const layers = [];
+  const source = 'ayagoz';
+
+  // Добавляем слой только если он есть в MBTiles.
+  const add = (layerName, layer) => {
+    if (available.has(layerName)) layers.push(layer);
+  };
+
+  const textPaint = color => ({
+    'text-color': color,
+    'text-halo-color': '#ffffff',
+    'text-halo-width': 1.8
+  });
+
+  layers.push({
+    id: 'background',
+    type: 'background',
+    paint: {
+      'background-color': '#f4f5f1'
+    }
+  });
+
+  // Парки и территории.
+  add('landuse', {
+    id: 'landuse',
+    type: 'fill',
+    source,
+    'source-layer': 'landuse',
+    paint: {
+      'fill-color': [
+        'match', ['get', 'class'],
+        ['industrial', 'commercial', 'retail'], '#ece9e4',
+        ['cemetery'], '#dbe3d1',
+        '#d8eacb'
+      ],
+      'fill-opacity': 0.85
+    }
+  });
+
+  add('water', {
+    id: 'water',
+    type: 'fill',
+    source,
+    'source-layer': 'water',
+    paint: {
+      'fill-color': '#a9d8ed'
+    }
+  });
+
+  add('waterways', {
+    id: 'waterways',
+    type: 'line',
+    source,
+    'source-layer': 'waterways',
+    paint: {
+      'line-color': '#80c2e2',
+      'line-width': roadWidth(0.5, 1.5, 2.6, 4)
+    }
+  });
+
+  // Здания рисуем ПЕРЕД дорогами.
+  // Так контуры зданий не будут перекрывать улицы.
+  add('buildings', {
+    id: 'buildings',
+    type: 'fill',
+    source,
+    'source-layer': 'buildings',
+    minzoom: 13,
+    paint: {
+      'fill-color': '#ded9d0',
+      'fill-outline-color': '#bfb9ae',
+      'fill-opacity': [
+        'interpolate', ['linear'], ['zoom'],
+        13, 0.65, 16, 1
+      ]
+    }
+  });
+
+  add('railways', {
+    id: 'railways',
+    type: 'line',
+    source,
+    'source-layer': 'railways',
+    paint: {
+      'line-color': '#8d8d91',
+      'line-width': roadWidth(1, 2, 2.5, 4),
+      'line-dasharray': [3, 2]
+    }
+  });
+
+  const roadFilter = classes => [
+    'in', ['get', 'class'], ['literal', classes]
+  ];
+
+  function roads(id, classes, fill, edge, widths) {
+    add('roads', {
+      id: id + '-outline',
+      type: 'line',
+      source,
+      'source-layer': 'roads',
+      filter: roadFilter(classes),
+      layout: {
+        'line-join': 'round',
+        'line-cap': 'round'
+      },
+      paint: {
+        'line-color': edge,
+        'line-width': roadWidth(...widths.map(w => w + 2))
+      }
+    });
+
+    add('roads', {
+      id,
+      type: 'line',
+      source,
+      'source-layer': 'roads',
+      filter: roadFilter(classes),
+      layout: {
+        'line-join': 'round',
+        'line-cap': 'round'
+      },
+      paint: {
+        'line-color': fill,
+        'line-width': roadWidth(...widths)
+      }
+    });
+  }
+
+  // Все дороги: даже неизвестные типы останутся видимыми.
+  add('roads', {
+    id: 'all-roads',
+    type: 'line',
+    source,
+    'source-layer': 'roads',
+    paint: {
+      'line-color': '#c7c9c7',
+      'line-width': roadWidth(0.6, 1.6, 2.8, 5)
+    }
+  });
+
+  roads(
+    'paths',
+    ['footway', 'cycleway', 'path', 'pedestrian',
+     'steps', 'track', 'bridleway'],
+    '#eeeadd', '#d2d0c8',
+    [0.4, 1.1, 1.8, 3.4]
+  );
+
+  roads(
+    'streets',
+    ['service', 'living_street', 'residential',
+     'unclassified', 'road'],
+    '#ffffff', '#c9c9c5',
+    [0.8, 3.5, 5.3, 10]
+  );
+
+  roads(
+    'secondary-roads',
+    ['tertiary', 'tertiary_link',
+     'secondary', 'secondary_link'],
+    '#ffe7ad', '#d1b77c',
+    [1.5, 5, 7, 14]
+  );
+
+  roads(
+    'main-roads',
+    ['primary', 'primary_link', 'trunk', 'trunk_link',
+     'motorway', 'motorway_link'],
+    '#ffd08c', '#cda369',
+    [2, 6.5, 9, 18]
+  );
+
+  // Цветные обозначения организаций.
+  const poiType = [
+    'coalesce',
+    ['get', 'amenity'],
+    ['get', 'shop'],
+    ['get', 'healthcare'],
+    ['get', 'industrial'],
+    ['get', 'office'],
+    ['get', 'tourism'],
+    ['get', 'leisure'],
+    'other'
+  ];
+
+  add('pois', {
+    id: 'poi-dots',
+    type: 'circle',
+    source,
+    'source-layer': 'pois',
+    minzoom: 14,
+    paint: {
+      'circle-color': [
+        'match', poiType,
+        ['school', 'kindergarten', 'college',
+         'university', 'library'], '#3b7fd4',
+        ['hospital', 'clinic', 'doctors',
+         'dentist', 'pharmacy'], '#db5c67',
+        ['fuel', 'car_wash', 'parking',
+         'bus_station', 'taxi'], '#b183cf',
+        ['park', 'sports_centre',
+         'stadium', 'playground'], '#4b9b61',
+        ['industrial', 'works', 'warehouse'], '#897d70',
+        '#da954f'
+      ],
+      'circle-radius': [
+        'interpolate', ['linear'], ['zoom'],
+        14, 2, 16, 4, 19, 6
+      ],
+      'circle-stroke-width': 1.2,
+      'circle-stroke-color': '#ffffff'
+    }
+  });
+
+  // Названия улиц.
+  add('roads', {
+    id: 'road-names',
+    type: 'symbol',
+    source,
+    'source-layer': 'roads',
+    minzoom: 13,
+    filter: [
+      'any',
+      ['has', 'name'],
+      ['has', 'name_ru'],
+      ['has', 'name_kk'],
+      ['has', 'ref']
+    ],
+    layout: {
+      'symbol-placement': 'line',
+      'symbol-spacing': 220,
+      'text-field': [
+        'coalesce',
+        ['get', 'name_ru'],
+        ['get', 'name'],
+        ['get', 'name_kk'],
+        ['get', 'ref'],
+        ''
+      ],
+      'text-font': ['Open Sans Regular'],
+      'text-size': [
+        'interpolate', ['linear'], ['zoom'],
+        13, 10, 16, 13, 19, 15
+      ]
+    },
+    paint: textPaint('#52606a')
+  });
+
+  // Названия населённых пунктов.
+  add('places', {
+    id: 'place-names',
+    type: 'symbol',
+    source,
+    'source-layer': 'places',
+    layout: {
+      'text-field': [
+        'coalesce',
+        ['get', 'name_ru'],
+        ['get', 'name'],
+        ['get', 'name_kk'],
+        ''
+      ],
+      'text-font': ['Open Sans Regular'],
+      'text-size': [
+        'interpolate', ['linear'], ['zoom'],
+        10, 13, 15, 17, 18, 20
+      ]
+    },
+    paint: textPaint('#325266')
+  });
+
+  // Названия школ, магазинов, предприятий и других мест.
+  add('pois', {
+    id: 'poi-names',
+    type: 'symbol',
+    source,
+    'source-layer': 'pois',
+    minzoom: 15,
+    filter: [
+      'any',
+      ['has', 'name'],
+      ['has', 'name_ru'],
+      ['has', 'name_kk']
+    ],
+    layout: {
+      'text-field': [
+        'coalesce',
+        ['get', 'name_ru'],
+        ['get', 'name'],
+        ['get', 'name_kk'],
+        ''
+      ],
+      'text-font': ['Open Sans Regular'],
+      'text-size': 11,
+      'text-anchor': 'top',
+      'text-offset': [0, 0.8],
+      'text-max-width': 12
+    },
+    paint: textPaint('#45545d')
+  });
+
+  // Номера домов.
+  if (available.has('addresses')) {
+    add('addresses', {
+      id: 'house-numbers',
+      type: 'symbol',
+      source,
+      'source-layer': 'addresses',
+      minzoom: 16,
+      filter: ['has', 'housenumber'],
+      layout: {
+        'text-field': ['get', 'housenumber'],
+        'text-font': ['Open Sans Regular'],
+        'text-size': [
+          'interpolate', ['linear'], ['zoom'],
+          16, 10, 19, 14
+        ],
+        'text-allow-overlap': false
+      },
+      paint: textPaint('#514b44')
+    });
+  } else {
+    // Резерв для старой карты без слоя addresses.
+    add('buildings', {
+      id: 'house-numbers',
+      type: 'symbol',
+      source,
+      'source-layer': 'buildings',
+      minzoom: 16,
+      filter: ['has', 'housenumber'],
+      layout: {
+        'text-field': ['get', 'housenumber'],
+        'text-font': ['Open Sans Regular'],
+        'text-size': 11
+      },
+      paint: textPaint('#514b44')
+    });
+  }
+
   return {
     version: 8,
-    name: 'Аягоз · Карта для такси',
-    glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
+    name: 'Аягоз — карта для такси',
+    glyphs:
+      'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
     sources: {
       ayagoz: {
         type: 'vector',
-        tiles: [origin + '/tiles/{z}/{x}/{y}.pbf?v=' + VERSION],
-        minzoom, maxzoom,
-        bounds: [80.30, 47.90, 80.55, 48.05],
-        attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap contributors</a>'
+        tiles: [
+          origin + '/tiles/{z}/{x}/{y}.pbf?v=' + version
+        ],
+        minzoom,
+        maxzoom,
+        bounds: CITY_BOUNDS,
+        attribution:
+          '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>'
       }
     },
-    layers: [
-      { id: 'background', type: 'background', paint: { 'background-color': '#f5f6f3' } },
-      { id: 'parks', type: 'fill', source: 'ayagoz', 'source-layer': 'landuse',
-        paint: { 'fill-color': '#dcebcf', 'fill-opacity': 0.85 } },
-      { id: 'water', type: 'fill', source: 'ayagoz', 'source-layer': 'water',
-        paint: { 'fill-color': '#afdbea', 'fill-outline-color': '#8bc6dc' } },
-      { id: 'waterways', type: 'line', source: 'ayagoz', 'source-layer': 'waterways',
-        paint: { 'line-color': '#8bc6dc', 'line-width': lineWidth(0.6, 2, 4) } },
-      { id: 'railways', type: 'line', source: 'ayagoz', 'source-layer': 'railways',
-        paint: { 'line-color': '#8e9295', 'line-dasharray': [2, 2], 'line-width': 2 } },
-      ...roadLayer('paths',
-        ['footway', 'cycleway', 'path', 'pedestrian', 'steps', 'track'],
-        '#f3f0e9', '#dedbd4', 0.25, 1.2, 2.4),
-      ...roadLayer('service-roads',
-        ['service', 'living_street', 'residential', 'unclassified', 'road'],
-        '#ffffff', '#c9cbc9', 0.6, 3.6, 10),
-      ...roadLayer('secondary-roads',
-        ['tertiary', 'tertiary_link', 'secondary', 'secondary_link'],
-        '#ffedbf', '#d0b777', 1.6, 5.4, 14),
-      ...roadLayer('main-roads',
-        ['primary', 'primary_link', 'trunk', 'trunk_link', 'motorway', 'motorway_link'],
-        '#ffd18b', '#d5a666', 2.5, 7.2, 17),
-      { id: 'buildings', type: 'fill', source: 'ayagoz', 'source-layer': 'buildings',
-        minzoom: 13,
-        paint: { 'fill-color': '#e2ddd4', 'fill-outline-color': '#c9c1b5',
-          'fill-opacity': ['interpolate', ['linear'], ['zoom'], 13, 0.6, 16, 1] } },
-      { id: 'poi-dots', type: 'circle', source: 'ayagoz', 'source-layer': 'pois', minzoom: 15,
-        paint: { 'circle-radius': ['interpolate', ['linear'], ['zoom'], 15, 2.5, 18, 4],
-          'circle-color': '#528c90', 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 1.2 } },
-      { id: 'road-names', type: 'symbol', source: 'ayagoz', 'source-layer': 'roads', minzoom: 13,
-        filter: ['any', ['has', 'name'], ['has', 'name_ru'], ['has', 'ref']],
-        layout: { 'symbol-placement': 'line', 'symbol-spacing': 220,
-          'text-field': ['coalesce', ['get', 'name_ru'], ['get', 'name'], ['get', 'ref'], ''],
-          'text-font': ['Open Sans Regular'],
-          'text-size': ['interpolate', ['linear'], ['zoom'], 13, 10, 17, 13],
-          'text-max-width': 10, 'text-rotation-alignment': 'map' },
-        paint: labelPaint('#58616b', 1.8) },
-      { id: 'place-names', type: 'symbol', source: 'ayagoz', 'source-layer': 'places',
-        layout: { 'text-field': ['coalesce', ['get', 'name_ru'], ['get', 'name'], ''],
-          'text-font': ['Open Sans Regular'],
-          'text-size': ['interpolate', ['linear'], ['zoom'], 10, 13, 15, 17],
-          'text-letter-spacing': 0.03 },
-        paint: labelPaint('#324f59', 2.2) },
-      { id: 'poi-names', type: 'symbol', source: 'ayagoz', 'source-layer': 'pois',
-        minzoom: 16, filter: ['has', 'name'],
-        layout: { 'text-field': ['get', 'name'], 'text-font': ['Open Sans Regular'],
-          'text-size': 10, 'text-offset': [0, 1], 'text-anchor': 'top',
-          'text-max-width': 10 },
-        paint: labelPaint('#477679', 1.6) },
-      { id: 'house-numbers', type: 'symbol', source: 'ayagoz', 'source-layer': 'addresses',
-        minzoom: 16, filter: ['has', 'housenumber'],
-        layout: { 'text-field': ['get', 'housenumber'], 'text-font': ['Open Sans Regular'],
-          'text-size': ['interpolate', ['linear'], ['zoom'], 16, 10, 18, 13],
-          'text-allow-overlap': false, 'text-padding': 2 },
-        paint: labelPaint('#504b43', 1.7) }
-    ]
+    layers
   };
 }
 
+// Интерфейс карты.
 const HTML = String.raw`<!doctype html>
-<html lang="ru"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Аягоз — карта такси</title>
-<link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 <style>
-*{box-sizing:border-box}html,body,#map{height:100%;width:100%;margin:0;font-family:system-ui,-apple-system,Arial,sans-serif}
-#map{position:absolute;inset:0}
-.panel{position:absolute;left:14px;top:14px;width:min(365px,calc(100% - 80px));z-index:5;background:white;border-radius:14px;box-shadow:0 5px 24px #0003;padding:12px}
-.brand{font-size:15px;font-weight:750;display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;color:#173a45}
-.sub{font-size:11px;color:#66747d;font-weight:400}
-.search-wrap{display:flex;gap:6px}
-#q{width:100%;font-size:14px;border-radius:9px;padding:11px;border:1px solid #d4dddf;outline:none}
-#q:focus{border-color:#148d93;box-shadow:0 0 0 2px #148d9322}
-button{background:#eef6f7;color:#175c65;border:0;border-radius:8px;padding:9px 10px;cursor:pointer;font-weight:650}
-button:hover{background:#dcecee}button.active{background:#137f87;color:#fff}
-.buttons{display:flex;gap:7px;margin-top:8px;flex-wrap:wrap}
-.buttons button{font-size:12px;flex:1;min-width:100px}
-#results{max-height:230px;overflow-y:auto;margin-top:5px}
-.result{display:block;width:100%;text-align:left;background:transparent;border-bottom:1px solid #edf0f1;border-radius:0;padding:9px 5px;font-size:13px;color:#263e43}
-.result small{display:block;color:#728189;font-size:11px;margin-top:3px}
-#note{font-size:11px;color:#586c72;margin-top:8px;line-height:1.4}
-#notice{position:absolute;z-index:5;left:50%;bottom:24px;transform:translateX(-50%);max-width:92%;background:#153e46;color:white;border-radius:10px;padding:10px 15px;font-size:12px;text-align:center;display:none}
-.legend{position:absolute;bottom:27px;left:14px;z-index:3;background:#fffffff0;padding:7px 10px;border-radius:8px;font-size:11px;color:#5b656d;box-shadow:0 1px 6px #0002}
-@media(max-width:560px){.panel{left:8px;top:8px;padding:10px;width:calc(100% - 67px)}.legend{bottom:29px;left:8px;font-size:10px}}
-</style></head><body>
-<div id="map"></div>
-<div class="panel">
-  <div class="brand"><span>🚕 Карта Аягоза</span><span class="sub">OpenStreetMap</span></div>
-  <div class="search-wrap"><input id="q" autocomplete="off" placeholder="Улица, дом: Абая 10" aria-label="Поиск адреса"><button id="clear" title="Очистить поиск">✕</button></div>
-  <div id="results"></div>
-  <div class="buttons"><button id="pickup">📍 Откуда</button><button id="dropoff">🏁 Куда</button><button id="locate">◎ Моё место</button></div>
-  <div id="note">Приблизь карту: номера домов появляются с масштаба 16. Нажми дом для подробностей.</div>
-</div>
-<div class="legend">🟠 главные дороги · ⚪ местные · 🟩 парки · 🔵 вода</div>
-<div id="notice" role="status"></div>
-<script>
-(function(){
-'use strict';
-var map = new maplibregl.Map({container:'map',style:'/style.json',center:[80.4366,47.96512],zoom:14,maxZoom:19,minZoom:10,maxBounds:[[80.29,47.89],[80.56,48.06]]});
-map.addControl(new maplibregl.NavigationControl({showCompass:false}), 'top-right');
-var search = document.getElementById('q');
-var results = document.getElementById('results');
-var pickupButton = document.getElementById('pickup');
-var dropoffButton = document.getElementById('dropoff');
-var searchItems = [];
-var selectedMode = '';
-var markers = {};
-var messageTimer;
-function notice(s){var el=document.getElementById('notice');el.textContent=s;el.style.display='block';clearTimeout(messageTimer);messageTimer=setTimeout(function(){el.style.display='none'},4500)}
-function setMode(mode){selectedMode=selectedMode===mode?'':mode;pickupButton.classList.toggle('active',selectedMode==='pickup');dropoffButton.classList.toggle('active',selectedMode==='dropoff');if(selectedMode)notice('Нажми на карту, чтобы выбрать '+(selectedMode==='pickup'?'место посадки':'место назначения'));}
-function choosePoint(coordinates, mode){if(markers[mode])markers[mode].remove();var el=document.createElement('div');el.style.cssText='width:24px;height:24px;background:'+(mode==='pickup'?'#128f7f':'#e87343')+';border:3px solid white;border-radius:50%;box-shadow:0 2px 7px #0008';markers[mode]=new maplibregl.Marker({element:el}).setLngLat(coordinates).addTo(map);notice((mode==='pickup'?'Посадка':'Назначение')+' выбрано. Маршруты подключим позже.');}
-pickupButton.addEventListener('click',function(){setMode('pickup')});
-dropoffButton.addEventListener('click',function(){setMode('dropoff')});
-document.getElementById('locate').addEventListener('click',function(){
- if(!navigator.geolocation){notice('Геолокация недоступна в этом браузере');return;}
- navigator.geolocation.getCurrentPosition(function(pos){map.flyTo({center:[pos.coords.longitude,pos.coords.latitude],zoom:16});notice('Местоположение определено');},function(){notice('Разреши доступ к геолокации или проверь настройки устройства');},{enableHighAccuracy:true,timeout:12000});
-});
-map.on('click',function(e){
- if(selectedMode){choosePoint([e.lngLat.lng,e.lngLat.lat],selectedMode);setMode(selectedMode);return;}
- var features=map.queryRenderedFeatures(e.point,{layers:['house-numbers','buildings','road-names','poi-dots','poi-names']});
- if(!features.length)return;
- var properties=features[0].properties||{};
- var title=properties.name||properties.housenumber||'Объект на карте';
- var details=[];
- if(properties.street)details.push(properties.street);
- if(properties.housenumber)details.push('дом '+properties.housenumber);
- var popup=document.createElement('div');popup.style.fontFamily='Arial,sans-serif';
- var titleEl=document.createElement('strong');titleEl.textContent=title;popup.appendChild(titleEl);
- if(details.length){var detail=document.createElement('div');detail.textContent=details.join(', ');popup.appendChild(detail)}
- else if(features[0].layer.id==='buildings'){var no=document.createElement('div');no.textContent='Номер дома не указан в OSM';popup.appendChild(no)}
- new maplibregl.Popup({maxWidth:'260px'}).setLngLat(e.lngLat).setDOMContent(popup).addTo(map);
-});
-map.on('error',function(e){console.error('Ошибка карты:',e.error)});
-
-function normalize(s){return String(s||'').toLocaleLowerCase('ru').replace(/ё/g,'е').replace(/(^|\s)(улица|ул\.?|проспект|пр\.?|дом|д\.?)(?=\s|$)/g,' ').replace(/[,.-]/g,' ').replace(/\s+/g,' ').trim()}
-function resultKind(x){return x.kind==='address'?'Адрес':x.kind==='street'?'Улица':'Населённый пункт'}
-function updateSearch(){
- var query=normalize(search.value);results.replaceChildren();if(query.length<2)return;
- var parts=query.split(' ');
- var matches=searchItems.filter(function(x){var t=normalize(x.label);return parts.every(function(p){return t.includes(p)})}).slice(0,12);
- if(!matches.length){var d=document.createElement('div');d.style.cssText='font-size:12px;color:#74848a;padding:10px 2px';d.textContent='В базе нет такого адреса. Попробуй название улицы.';results.appendChild(d);return;}
- matches.forEach(function(x){var b=document.createElement('button');b.className='result';b.textContent=x.label;var small=document.createElement('small');small.textContent=resultKind(x);b.appendChild(small);b.addEventListener('click',function(){map.flyTo({center:[x.lon,x.lat],zoom:x.kind==='address'?17:15});search.value=x.label;results.replaceChildren();new maplibregl.Popup().setLngLat([x.lon,x.lat]).setText(x.label).addTo(map)});results.appendChild(b)})
+* {
+  box-sizing: border-box;
 }
-search.addEventListener('input',updateSearch);
-document.getElementById('clear').addEventListener('click',function(){search.value='';results.replaceChildren();search.focus()});
-fetch('/search-index.json').then(function(r){if(!r.ok)throw Error('no index');return r.json()}).then(function(data){searchItems=Array.isArray(data)?data:[];document.getElementById('note').textContent='Поиск: '+searchItems.length+' адресов и улиц. Номера домов видны с масштаба 16, если они есть в OSM.';}).catch(function(){document.getElementById('note').textContent='Поиск пока не настроен: добавь addresses.json. Номера домов отображаются, если они указаны в OSM.'});
-})();
-</script></body></html>`;
+html, body, #map {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  font-family: system-ui, Arial, sans-serif;
+}
+#map {
+  position: absolute;
+  inset: 0;
+}
+.panel {
+  position: absolute;
+  z-index: 3;
+  top: 12px;
+  left: 12px;
+  width: min(360px, calc(100% - 78px));
+  padding: 13px;
+  background: white;
+  border-radius: 13px;
+  box-shadow: 0 3px 16px #0002;
+}
+.header {
+  font-weight: 750;
+  color: #21454c;
+  margin-bottom: 9px;
+}
+.search {
+  display: flex;
+  gap: 5px;
+}
+.search input {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #ccd5d8;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 14px;
+}
+button {
+  cursor: pointer;
+  border: 0;
+  border-radius: 8px;
+  padding: 9px;
+  background: #edf4f4;
+  color: #245861;
+  font-weight: 600;
+}
+.actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 9px;
+  flex-wrap: wrap;
+}
+.actions button {
+  flex: 1;
+  min-width: 85px;
+  font-size: 12px;
+}
+button.active {
+  background: #18868d;
+  color: white;
+}
+#results {
+  max-height: 220px;
+  overflow-y: auto;
+}
+.result {
+  width: 100%;
+  display: block;
+  text-align: left;
+  background: white;
+  border-bottom: 1px solid #e5ebec;
+  border-radius: 0;
+}
+.result small {
+  display: block;
+  color: #66777b;
+  margin-top: 3px;
+}
+#info {
+  color: #68797c;
+  font-size: 11px;
+  margin-top: 8px;
+}
+#status {
+  position: absolute;
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%);
+  z-index: 4;
+  background: #1d4750;
+  color: white;
+  padding: 9px 14px;
+  border-radius: 10px;
+  font-size: 12px;
+  max-width: 90%;
+  text-align: center;
+}
+@media(max-width:500px) {
+  .panel {
+    top: 7px;
+    left: 7px;
+    width: calc(100% - 66px);
+    padding: 9px;
+  }
+}
+</style>
+</head>
+<body>
+<div id="map"></div>
 
-async function main() {
-  if (!fs.existsSync(MBTILES_PATH)) throw new Error('Нет ayagoz.mbtiles рядом с server.js');
-  const SQL = await initSqlJs({locateFile: file => require.resolve('sql.js/dist/' + file)});
-  const db = new SQL.Database(new Uint8Array(fs.readFileSync(MBTILES_PATH)));
+<div class="panel">
+  <div class="header">🚕 Аягоз — карта такси</div>
+  <div class="search">
+    <input id="query" placeholder="Поиск улицы и дома" autocomplete="off">
+    <button id="clear">✕</button>
+  </div>
+  <div id="results"></div>
+  <div class="actions">
+    <button id="pickup">📍 Откуда</button>
+    <button id="dropoff">🏁 Куда</button>
+    <button id="locate">◎ Я здесь</button>
+  </div>
+  <div id="info">
+    Номера домов видны при приближении, если они есть в OSM.
+  </div>
+</div>
+
+<div id="status">Загрузка карты…</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var status = document.getElementById('status');
+  var statusTimer;
+
+  function message(text, autoHide) {
+    status.textContent = text;
+    status.style.display = 'block';
+    clearTimeout(statusTimer);
+    if (autoHide) {
+      statusTimer = setTimeout(function () {
+        status.style.display = 'none';
+      }, 4500);
+    }
+  }
+
+  if (!window.maplibregl) {
+    message('Не загрузилась библиотека MapLibre. Проверь интернет.');
+    return;
+  }
+
+  var map = new maplibregl.Map({
+    container: 'map',
+    style: '/style.json',
+    center: [80.4366, 47.96512],
+    zoom: 14,
+    minZoom: 10,
+    maxZoom: 19,
+    maxBounds: [
+      [80.29, 47.89],
+      [80.56, 48.06]
+    ]
+  });
+
+  map.addControl(
+    new maplibregl.NavigationControl(),
+    'top-right'
+  );
+
+  map.on('load', function () {
+    message('Карта загружена', true);
+  });
+
+  map.on('error', function (event) {
+    console.error('Ошибка MapLibre:', event.error);
+    message(
+      'Ошибка загрузки карты или тайлов. Проверь /health и консоль браузера.',
+      false
+    );
+  });
+
+  var mode = '';
+  var markers = {};
+  var pickup = document.getElementById('pickup');
+  var dropoff = document.getElementById('dropoff');
+
+  function setMode(next) {
+    mode = mode === next ? '' : next;
+    pickup.classList.toggle('active', mode === 'pickup');
+    dropoff.classList.toggle('active', mode === 'dropoff');
+
+    if (mode) {
+      message('Нажми на карту, чтобы выбрать точку', true);
+    }
+  }
+
+  pickup.onclick = function () {
+    setMode('pickup');
+  };
+
+  dropoff.onclick = function () {
+    setMode('dropoff');
+  };
+
+  function pin(coords, which) {
+    if (markers[which]) markers[which].remove();
+
+    var element = document.createElement('div');
+
+    element.style.cssText =
+      'width:23px;height:23px;border:3px solid white;' +
+      'border-radius:50%;background:' +
+      (which === 'pickup' ? '#0e998c' : '#e97943') +
+      ';box-shadow:0 2px 6px #0006';
+
+    markers[which] = new maplibregl.Marker({
+      element: element
+    }).setLngLat(coords).addTo(map);
+
+    message(
+      which === 'pickup'
+        ? 'Место посадки выбрано'
+        : 'Место назначения выбрано',
+      true
+    );
+  }
+
+  map.on('click', function (event) {
+    if (mode) {
+      var selected = mode;
+
+      pin(
+        [event.lngLat.lng, event.lngLat.lat],
+        selected
+      );
+
+      setMode(selected);
+      return;
+    }
+
+    var layerNames = [
+      'house-numbers',
+      'poi-dots',
+      'poi-names',
+      'buildings',
+      'road-names'
+    ].filter(function (id) {
+      return !!map.getLayer(id);
+    });
+
+    var f = map.queryRenderedFeatures(
+      event.point,
+      { layers: layerNames }
+    )[0];
+
+    if (!f) return;
+
+    var p = f.properties || {};
+    var parts = [];
+
+    if (p.street) parts.push(p.street);
+    if (p.housenumber) {
+      parts.push('дом ' + p.housenumber);
+    }
+
+    var title =
+      p.name_ru ||
+      p.name ||
+      p.name_kk ||
+      parts.join(', ') ||
+      'Объект на карте';
+
+    var content = document.createElement('div');
+    var strong = document.createElement('strong');
+
+    strong.textContent = title;
+    content.appendChild(strong);
+
+    if (parts.length) {
+      var details = document.createElement('div');
+      details.textContent = parts.join(', ');
+      content.appendChild(details);
+    }
+
+    new maplibregl.Popup({
+      maxWidth: '280px'
+    })
+      .setLngLat(event.lngLat)
+      .setDOMContent(content)
+      .addTo(map);
+  });
+
+  document.getElementById('locate').onclick = function () {
+    if (!navigator.geolocation) {
+      message('Геолокация недоступна', true);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      function (position) {
+        var coordinates = [
+          position.coords.longitude,
+          position.coords.latitude
+        ];
+
+        map.flyTo({
+          center: coordinates,
+          zoom: 16
+        });
+
+        message('Местоположение определено', true);
+      },
+      function () {
+        message('Не получилось определить местоположение', true);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 12000
+      }
+    );
+  };
+
+  var input = document.getElementById('query');
+  var results = document.getElementById('results');
+  var index = [];
+
+  function normalize(value) {
+    return String(value || '')
+      .toLocaleLowerCase('ru')
+      .replace(/ё/g, 'е')
+      .replace(/[,.-]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function search() {
+    results.replaceChildren();
+
+    var q = normalize(input.value);
+    if (q.length < 2) return;
+
+    var words = q.split(' ');
+
+    var matches = index.filter(function (item) {
+      var label = normalize(item.label);
+
+      return words.every(function (word) {
+        return label.includes(word);
+      });
+    }).slice(0, 12);
+
+    if (!matches.length) {
+      results.textContent = 'Совпадения не найдены в базе адресов';
+      return;
+    }
+
+    matches.forEach(function (item) {
+      var button = document.createElement('button');
+      button.className = 'result';
+      button.textContent = item.label;
+
+      var subtitle = document.createElement('small');
+
+      subtitle.textContent =
+        item.kind === 'address'
+          ? 'Адрес'
+          : item.kind === 'street'
+          ? 'Улица'
+          : 'Место';
+
+      button.appendChild(subtitle);
+
+      button.onclick = function () {
+        input.value = item.label;
+        results.replaceChildren();
+
+        map.flyTo({
+          center: [item.lon, item.lat],
+          zoom: item.kind === 'address' ? 17 : 15
+        });
+
+        new maplibregl.Popup()
+          .setLngLat([item.lon, item.lat])
+          .setText(item.label)
+          .addTo(map);
+      };
+
+      results.appendChild(button);
+    });
+  }
+
+  input.addEventListener('input', search);
+
+  document.getElementById('clear').onclick = function () {
+    input.value = '';
+    results.replaceChildren();
+    input.focus();
+  };
+
+  fetch('/search-index.json')
+    .then(function (r) {
+      if (!r.ok) throw Error('No search index');
+      return r.json();
+    })
+    .then(function (data) {
+      index = Array.isArray(data) ? data : [];
+
+      document.getElementById('info').textContent =
+        'В индексе: ' + index.length +
+        ' адресов и улиц. Номера домов доступны с масштаба 16.';
+    })
+    .catch(function () {
+      document.getElementById('info').textContent =
+        'Поиск адресов появится после загрузки addresses.json в GitHub.';
+    });
+})();
+</script>
+</body>
+</html>`;
+
+// Запуск сервера.
+async function start() {
+  if (!MAP_PATH) {
+    throw new Error(
+      'Нет ayagoz-v3.mbtiles или ayagoz.mbtiles в корне проекта'
+    );
+  }
+
+  const SQL = await initSqlJs({
+    locateFile: file => require.resolve('sql.js/dist/' + file)
+  });
+
+  const mapBytes = fs.readFileSync(MAP_PATH);
+  const db = new SQL.Database(new Uint8Array(mapBytes));
+
   const metadata = {};
-  const rows = db.exec('SELECT name, value FROM metadata');
-  for (const row of (rows[0]?.values || [])) metadata[row[0]] = row[1];
-  const minzoom = Number(metadata.minzoom || 10), maxzoom = Number(metadata.maxzoom || 14);
-  const count = db.exec('SELECT count(*) FROM tiles')[0]?.values[0]?.[0] || 0;
-  const index = fs.existsSync(SEARCH_PATH) ? fs.readFileSync(SEARCH_PATH) : Buffer.from('[]');
-  console.log('Карта загружена:', count, 'тайлов; zoom', minzoom, '-', maxzoom, '; индекс:', index.length, 'байт');
+  const rows = db.exec('SELECT name, value FROM metadata')[0];
+
+  for (const [name, value] of (rows ? rows.values : [])) {
+    metadata[name] = value;
+  }
+
+  const tileCount =
+    db.exec('SELECT COUNT(*) FROM tiles')[0].values[0][0];
+
+  const zoomCounts = db.exec(
+    'SELECT zoom_level, COUNT(*) FROM tiles ' +
+    'GROUP BY zoom_level ORDER BY zoom_level'
+  )[0];
+
+  const zooms = zoomCounts ? zoomCounts.values : [];
+
+  const minzoom = Number(metadata.minzoom || 10);
+  const maxzoom = Number(metadata.maxzoom || 14);
+
+  let layerInfo = [];
+
+  try {
+    layerInfo =
+      JSON.parse(metadata.json || '{}').vector_layers || [];
+  } catch (_) {}
+
+  const layerNames = new Set(
+    layerInfo.map(layer => layer.id)
+  );
+
+  // Уникальная версия для обновления кэша.
+  const fileStat = fs.statSync(MAP_PATH);
+  const version =
+    String(fileStat.size) + '-' +
+    String(Math.floor(fileStat.mtimeMs));
+
+  const searchIndex = fs.existsSync(INDEX_PATH)
+    ? fs.readFileSync(INDEX_PATH)
+    : Buffer.from('[]');
+
+  console.log(
+    'Карта:', path.basename(MAP_PATH),
+    '| Тайлов:', tileCount,
+    '| Масштаб:', minzoom, '-', maxzoom
+  );
+
+  console.log(
+    'Слои:', [...layerNames].join(', ')
+  );
+
   http.createServer((req, res) => {
     try {
-      const url = new URL(req.url, 'http://localhost');
-      if (url.pathname === '/') return reply(res, 200, 'text/html; charset=utf-8', HTML);
-      if (url.pathname === '/health') return reply(res, 200, 'application/json; charset=utf-8', JSON.stringify({status:'ok',city:'Ayagoz',tiles:count,minzoom,maxzoom,index:fs.existsSync(SEARCH_PATH)}));
-      if (url.pathname === '/search-index.json') return reply(res, 200, 'application/json; charset=utf-8', index, 'public,max-age=300');
-      if (url.pathname === '/style.json') {
-        const protocol = req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
-        const origin = protocol + '://' + req.headers.host;
-        return reply(res, 200, 'application/json; charset=utf-8', JSON.stringify(style(origin,minzoom,maxzoom)));
+      const url = new URL(
+        req.url,
+        'http://localhost'
+      );
+
+      if (url.pathname === '/') {
+        return respond(
+          res, 200,
+          'text/html; charset=utf-8',
+          HTML
+        );
       }
-      const m = /^\/tiles\/(\d+)\/(\d+)\/(\d+)\.pbf$/.exec(url.pathname);
-      if (m) {
-        const [z,x,y] = m.slice(1).map(Number);
-        if (z < minzoom || z > maxzoom || x < 0 || y < 0 || x >= 2**z || y >= 2**z) return reply(res,404,'text/plain','Not found');
-        const stmt = db.prepare('SELECT tile_data FROM tiles WHERE zoom_level=? AND tile_column=? AND tile_row=?');
-        let tile;
-        try { stmt.bind([z,x,2**z-1-y]); if (stmt.step()) tile = stmt.getAsObject().tile_data; }
-        finally { stmt.free(); }
-        if (!tile) return reply(res,204,'text/plain','');
-        res.writeHead(200, {'Content-Type':'application/vnd.mapbox-vector-tile','Content-Encoding':'gzip','Cache-Control':'public,max-age=300','Access-Control-Allow-Origin':'*'});
+
+      if (url.pathname === '/health') {
+        return respond(
+          res, 200,
+          'application/json; charset=utf-8',
+          JSON.stringify({
+            status: 'ok',
+            mapFile: path.basename(MAP_PATH),
+            tiles: tileCount,
+            minzoom,
+            maxzoom,
+            layers: [...layerNames],
+            perZoom: zooms,
+            searchIndex: fs.existsSync(INDEX_PATH)
+          })
+        );
+      }
+
+      if (url.pathname === '/search-index.json') {
+        return respond(
+          res, 200,
+          'application/json; charset=utf-8',
+          searchIndex,
+          'public, max-age=300'
+        );
+      }
+
+      if (url.pathname === '/style.json') {
+        const proto =
+          req.headers['x-forwarded-proto'] === 'https'
+            ? 'https'
+            : 'http';
+
+        const host = req.headers.host || 'localhost';
+        const origin = proto + '://' + host;
+
+        return respond(
+          res, 200,
+          'application/json; charset=utf-8',
+          JSON.stringify(
+            makeStyle(
+              origin,
+              minzoom,
+              maxzoom,
+              version,
+              layerNames
+            )
+          )
+        );
+      }
+
+      // Векторные тайлы.
+      const match =
+        /^\/tiles\/(\d+)\/(\d+)\/(\d+)\.pbf$/.exec(url.pathname);
+
+      if (match) {
+        const [z, x, y] = match.slice(1).map(Number);
+
+        if (
+          z < minzoom ||
+          z > maxzoom ||
+          x < 0 ||
+          y < 0 ||
+          x >= 2 ** z ||
+          y >= 2 ** z
+        ) {
+          return respond(
+            res, 404,
+            'text/plain; charset=utf-8',
+            'Tile outside zoom range'
+          );
+        }
+
+        // Преобразование XYZ в TMS для MBTiles.
+        const tmsY = 2 ** z - 1 - y;
+
+        const statement = db.prepare(
+          'SELECT tile_data FROM tiles ' +
+          'WHERE zoom_level=? AND tile_column=? AND tile_row=?'
+        );
+
+        let tile = null;
+
+        try {
+          statement.bind([z, x, tmsY]);
+
+          if (statement.step()) {
+            tile = statement.getAsObject().tile_data;
+          }
+        } finally {
+          statement.free();
+        }
+
+        if (!tile) {
+          return respond(
+            res, 204,
+            'text/plain; charset=utf-8',
+            ''
+          );
+        }
+
+        const headers = {
+          'Content-Type':
+            'application/vnd.mapbox-vector-tile',
+          'Cache-Control':
+            'public, max-age=86400',
+          'Access-Control-Allow-Origin': '*'
+        };
+
+        // Указываем gzip только для действительно сжатых тайлов.
+        if (tile[0] === 0x1f && tile[1] === 0x8b) {
+          headers['Content-Encoding'] = 'gzip';
+        }
+
+        res.writeHead(200, headers);
         return res.end(Buffer.from(tile));
       }
-      return reply(res,404,'text/plain','Not found');
-    } catch (error) { console.error(error); return reply(res,500,'text/plain','Server error'); }
-  }).listen(PORT,'0.0.0.0',() => console.log('Ayagoz Taxi Map v2 · порт', PORT));
+
+      return respond(
+        res, 404,
+        'text/plain; charset=utf-8',
+        'Not found'
+      );
+    } catch (err) {
+      console.error('Ошибка запроса:', err);
+
+      return respond(
+        res, 500,
+        'text/plain; charset=utf-8',
+        'Server error'
+      );
+    }
+  }).listen(
+    PORT,
+    '0.0.0.0',
+    () => console.log(
+      'Сервер Аягоза запущен на порту ' + PORT
+    )
+  );
 }
-main().catch(error=>{console.error(error);process.exit(1)});
+
+start().catch(err => {
+  console.error('Ошибка запуска:', err);
+  process.exit(1);
+});
