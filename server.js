@@ -10,7 +10,7 @@ async function start() {
   });
 
   const db = new SQL.Database(
-    new Uint8Array(fs.readFileSync("./ayagoz-v3.mbtiles"))
+    new Uint8Array(fs.readFileSync("./ayagoz.mbtiles"))
   );
 
   const html = `<!DOCTYPE html>
@@ -145,8 +145,8 @@ async function start() {
       return;
     }
 
-   const match = url.pathname.match(
-  /^\/tiles\/(\d+)\/(\d+)\/(\d+)\.pbf$/
+    const match = url.pathname.match(
+      /^\\/tiles\\/(\\d+)\\/(\\d+)\\/(\\d+)\\.pbf$/
     );
 
     if (match) {
