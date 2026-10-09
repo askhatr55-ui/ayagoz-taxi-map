@@ -145,8 +145,8 @@ async function start() {
       return;
     }
 
-    const match = url.pathname.match(
-      /^\\/tiles\\/(\\d+)\\/(\\d+)\\/(\\d+)\\.pbf$/
+   const match = url.pathname.match(
+  /^\/tiles\/(\d+)\/(\d+)\/(\d+)\.pbf$/
     );
 
     if (match) {
