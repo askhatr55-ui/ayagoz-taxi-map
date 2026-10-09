@@ -1,13 +1,13 @@
-@@ -2,11 +2,10 @@
+{
   "name": "ayagoz-taxi-map",
   "version": "1.0.0",
   "private": true,
-  "description": "Map infrastructure for Ayagoz Taxi",
   "scripts": {
     "start": "node server.js"
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=20"
+  },
   "dependencies": {
     "sql.js": "^1.13.0"
   }
