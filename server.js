@@ -10,7 +10,7 @@ const PORT = Number(process.env.PORT) || 3000;
 const ROOT = __dirname;
 
 // Используем выбранный файл карты v3.
-const MAP_PATH = path.join(ROOT, 'ayagoz-v3.mbtiles');
+const MAP_PATH = path.join(ROOT, 'ayagoz.mbtiles');
 
 const INDEX_PATH = path.join(ROOT, 'addresses.json');
 const CITY_BOUNDS = [80.30, 47.90, 80.55, 48.05];
