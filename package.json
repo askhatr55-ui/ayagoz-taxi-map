@@ -1,6 +1,6 @@
 {
   "name": "ayagoz-taxi-map",
-  "version": "3.2.0",
+  "version": "3.3.0",
   "private": true,
   "scripts": {"start": "node server.js", "test": "node --test test/server.test.js"},
   "engines": {"node": ">=20"},

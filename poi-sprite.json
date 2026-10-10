@@ -1,0 +1,51 @@
+{
+  "poi-education": {
+    "x": 0,
+    "y": 0,
+    "width": 32,
+    "height": 32,
+    "pixelRatio": 1
+  },
+  "poi-medical": {
+    "x": 32,
+    "y": 0,
+    "width": 32,
+    "height": 32,
+    "pixelRatio": 1
+  },
+  "poi-shop": {
+    "x": 64,
+    "y": 0,
+    "width": 32,
+    "height": 32,
+    "pixelRatio": 1
+  },
+  "poi-industry": {
+    "x": 96,
+    "y": 0,
+    "width": 32,
+    "height": 32,
+    "pixelRatio": 1
+  },
+  "poi-transport": {
+    "x": 128,
+    "y": 0,
+    "width": 32,
+    "height": 32,
+    "pixelRatio": 1
+  },
+  "poi-park": {
+    "x": 160,
+    "y": 0,
+    "width": 32,
+    "height": 32,
+    "pixelRatio": 1
+  },
+  "poi-place": {
+    "x": 192,
+    "y": 0,
+    "width": 32,
+    "height": 32,
+    "pixelRatio": 1
+  }
+}

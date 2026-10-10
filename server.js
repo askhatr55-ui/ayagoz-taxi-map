@@ -6,7 +6,7 @@ const crypto = require('node:crypto');
 const zlib = require('node:zlib');
 const initSqlJs = require('sql.js');
 const ROOT = __dirname;
-const SERVER_VERSION = 'ayagoz-map-3.2.0';
+const SERVER_VERSION = 'ayagoz-map-3.3.0';
 const hash = data => crypto.createHash('sha256').update(data).digest('hex');
 
 async function start(options = {}) {
@@ -48,6 +48,8 @@ async function start(options = {}) {
     else { if (!b.length) throw Error('Empty tile blob'); rawTiles++; }
   }
   const styleTemplate = JSON.parse(fs.readFileSync(path.join(root,'style.json'),'utf8'));
+  const spriteFiles = ['poi-sprite.json','poi-sprite.png','poi-sprite@2x.json','poi-sprite@2x.png'];
+  const sprites = new Map(spriteFiles.map(name=>[name,fs.readFileSync(path.join(root,name))]));
   const html = fs.readFileSync(path.join(root,'index.html'));
   const warnings = [];
   let search = [];
@@ -65,7 +67,7 @@ async function start(options = {}) {
   const roadsLayer = layers.find(l=>l.id === 'roads');
   const displayMinZoom = Math.max(minzoom, roadsLayer?.minzoom ?? minzoom);
   const commit = process.env.RENDER_GIT_COMMIT || process.env.GIT_COMMIT || null;
-  const sourceHash = hash(Buffer.concat([fs.readFileSync(__filename), html, Buffer.from(JSON.stringify(styleTemplate))]));
+  const sourceHash = hash(Buffer.concat([fs.readFileSync(__filename), html, Buffer.from(JSON.stringify(styleTemplate)),...sprites.values()]));
   const counts = {served:0, missing:0, errors:0};
   const recentMissing = [];
   const norm = s => String(s || '').toLocaleLowerCase('ru').replace(/ё/g,'е').replace(/[,.-]/g,' ').replace(/\s+/g,' ').trim();
@@ -100,12 +102,17 @@ async function start(options = {}) {
         const protocol = String(req.headers['x-forwarded-proto'] || '').split(',')[0].trim() === 'https' ? 'https' : 'http';
         const origin = new URL(process.env.PUBLIC_ORIGIN || `${protocol}://${req.headers.host}`).origin;
         if (!/^https?:\/\//.test(origin)) throw Error('PUBLIC_ORIGIN must use HTTP or HTTPS');
+        style.sprite = origin + '/poi-sprite';
         style.sources = {ayagoz:{type:'vector',tiles:[`${origin}/tiles/{z}/{x}/{y}.pbf?v=${version}`],
           minzoom:displayMinZoom,maxzoom,bounds,scheme:'xyz',attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>'}};
         style.layers = style.layers.filter(l=>!l['source-layer'] || layerIds.has(l['source-layer']));
         json(200,style);return;
       }
       if (url.pathname === '/search-index.json') { json(200,search);return; }
+      if (sprites.has(url.pathname.slice(1))) {
+        const name = url.pathname.slice(1);
+        send(200,name.endsWith('.png')?'image/png':'application/json; charset=utf-8',sprites.get(name));return;
+      }
       if (url.pathname === '/search') {
         const q = norm((url.searchParams.get('q') || '').slice(0,160));
         const words = q.split(' ');

@@ -534,105 +534,6 @@
       }
     },
     {
-      "id": "poi-dots",
-      "type": "circle",
-      "source": "ayagoz",
-      "source-layer": "pois",
-      "minzoom": 14,
-      "paint": {
-        "circle-color": [
-          "match",
-          [
-            "coalesce",
-            [
-              "get",
-              "amenity"
-            ],
-            [
-              "get",
-              "shop"
-            ],
-            [
-              "get",
-              "healthcare"
-            ],
-            [
-              "get",
-              "industrial"
-            ],
-            [
-              "get",
-              "office"
-            ],
-            [
-              "get",
-              "tourism"
-            ],
-            [
-              "get",
-              "leisure"
-            ],
-            "other"
-          ],
-          [
-            "school",
-            "kindergarten",
-            "college",
-            "university",
-            "library"
-          ],
-          "#3b7fd4",
-          [
-            "hospital",
-            "clinic",
-            "doctors",
-            "dentist",
-            "pharmacy"
-          ],
-          "#db5c67",
-          [
-            "fuel",
-            "car_wash",
-            "parking",
-            "bus_station",
-            "taxi"
-          ],
-          "#b183cf",
-          [
-            "park",
-            "sports_centre",
-            "stadium",
-            "playground"
-          ],
-          "#4b9b61",
-          [
-            "industrial",
-            "works",
-            "warehouse"
-          ],
-          "#897d70",
-          "#da954f"
-        ],
-        "circle-radius": [
-          "interpolate",
-          [
-            "linear"
-          ],
-          [
-            "zoom"
-          ],
-          14,
-          2,
-          16,
-          4,
-          19,
-          6
-        ],
-        "circle-stroke-width": 1.2,
-        "circle-stroke-color": "#ffffff"
-      }
-    },
-    {
       "id": "road-names",
       "type": "symbol",
       "source": "ayagoz",
@@ -757,38 +658,31 @@
       "type": "symbol",
       "source": "ayagoz",
       "source-layer": "pois",
-      "minzoom": 15,
-      "filter": [
-        "any",
-        [
-          "has",
-          "name"
-        ],
-        [
-          "has",
-          "name_ru"
-        ],
-        [
-          "has",
-          "name_kk"
-        ]
-      ],
+      "minzoom": 14,
       "layout": {
         "text-field": [
-          "coalesce",
+          "step",
           [
-            "get",
-            "name_ru"
+            "zoom"
           ],
+          "",
+          15,
           [
-            "get",
-            "name"
-          ],
-          [
-            "get",
-            "name_kk"
-          ],
-          ""
+            "coalesce",
+            [
+              "get",
+              "name_ru"
+            ],
+            [
+              "get",
+              "name"
+            ],
+            [
+              "get",
+              "name_kk"
+            ],
+            ""
+          ]
         ],
         "text-font": [
           "Noto Sans Regular"
@@ -797,9 +691,170 @@
         "text-anchor": "top",
         "text-offset": [
           0,
-          0.8
+          1.4
         ],
-        "text-max-width": 12
+        "text-max-width": 12,
+        "icon-image": [
+          "case",
+          [
+            "in",
+            [
+              "coalesce",
+              [
+                "get",
+                "amenity"
+              ],
+              ""
+            ],
+            [
+              "literal",
+              [
+                "school",
+                "kindergarten",
+                "college",
+                "university",
+                "library"
+              ]
+            ]
+          ],
+          "poi-education",
+          [
+            "any",
+            [
+              "in",
+              [
+                "coalesce",
+                [
+                  "get",
+                  "amenity"
+                ],
+                ""
+              ],
+              [
+                "literal",
+                [
+                  "hospital",
+                  "clinic",
+                  "doctors",
+                  "dentist",
+                  "pharmacy"
+                ]
+              ]
+            ],
+            [
+              "has",
+              "healthcare"
+            ]
+          ],
+          "poi-medical",
+          [
+            "in",
+            [
+              "coalesce",
+              [
+                "get",
+                "amenity"
+              ],
+              ""
+            ],
+            [
+              "literal",
+              [
+                "fuel",
+                "car_wash",
+                "parking",
+                "bus_station",
+                "taxi"
+              ]
+            ]
+          ],
+          "poi-transport",
+          [
+            "any",
+            [
+              "has",
+              "industrial"
+            ],
+            [
+              "has",
+              "craft"
+            ],
+            [
+              "has",
+              "office"
+            ]
+          ],
+          "poi-industry",
+          [
+            "any",
+            [
+              "has",
+              "shop"
+            ],
+            [
+              "in",
+              [
+                "coalesce",
+                [
+                  "get",
+                  "amenity"
+                ],
+                ""
+              ],
+              [
+                "literal",
+                [
+                  "cafe",
+                  "restaurant",
+                  "fast_food",
+                  "bank",
+                  "atm"
+                ]
+              ]
+            ]
+          ],
+          "poi-shop",
+          [
+            "in",
+            [
+              "coalesce",
+              [
+                "get",
+                "leisure"
+              ],
+              ""
+            ],
+            [
+              "literal",
+              [
+                "park",
+                "sports_centre",
+                "stadium",
+                "playground",
+                "garden"
+              ]
+            ]
+          ],
+          "poi-park",
+          "poi-place"
+        ],
+        "icon-size": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          14,
+          0.65,
+          17,
+          0.85
+        ],
+        "icon-allow-overlap": false,
+        "icon-padding": 3,
+        "text-optional": true,
+        "text-allow-overlap": false
       },
       "paint": {
         "text-color": "#45545d",
@@ -846,5 +901,6 @@
         "text-halo-width": 1.8
       }
     }
-  ]
+  ],
+  "sprite": "/poi-sprite"
 }
