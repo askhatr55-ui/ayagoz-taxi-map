@@ -1,0 +1,850 @@
+{
+  "version": 8,
+  "name": "Аягоз — карта для такси",
+  "glyphs": "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
+  "sources": {},
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "#f4f5f1"
+      }
+    },
+    {
+      "id": "landuse",
+      "type": "fill",
+      "source": "ayagoz",
+      "source-layer": "landuse",
+      "paint": {
+        "fill-color": [
+          "match",
+          [
+            "get",
+            "class"
+          ],
+          [
+            "industrial",
+            "commercial",
+            "retail"
+          ],
+          "#ece9e4",
+          [
+            "cemetery"
+          ],
+          "#dbe3d1",
+          "#d8eacb"
+        ],
+        "fill-opacity": 0.85
+      }
+    },
+    {
+      "id": "water",
+      "type": "fill",
+      "source": "ayagoz",
+      "source-layer": "water",
+      "paint": {
+        "fill-color": "#a9d8ed"
+      }
+    },
+    {
+      "id": "waterways",
+      "type": "line",
+      "source": "ayagoz",
+      "source-layer": "waterways",
+      "paint": {
+        "line-color": "#80c2e2",
+        "line-width": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          10,
+          0.5,
+          14,
+          1.5,
+          16,
+          2.6,
+          19,
+          4
+        ]
+      }
+    },
+    {
+      "id": "buildings",
+      "type": "fill",
+      "source": "ayagoz",
+      "source-layer": "buildings",
+      "minzoom": 13,
+      "paint": {
+        "fill-color": "#ded9d0",
+        "fill-outline-color": "#bfb9ae",
+        "fill-opacity": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          13,
+          0.65,
+          16,
+          1
+        ]
+      }
+    },
+    {
+      "id": "railways",
+      "type": "line",
+      "source": "ayagoz",
+      "source-layer": "railways",
+      "paint": {
+        "line-color": "#8d8d91",
+        "line-width": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          10,
+          1,
+          14,
+          2,
+          16,
+          2.5,
+          19,
+          4
+        ],
+        "line-dasharray": [
+          3,
+          2
+        ]
+      }
+    },
+    {
+      "id": "all-roads",
+      "type": "line",
+      "source": "ayagoz",
+      "source-layer": "roads",
+      "paint": {
+        "line-color": "#c7c9c7",
+        "line-width": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          10,
+          0.6,
+          14,
+          1.6,
+          16,
+          2.8,
+          19,
+          5
+        ]
+      }
+    },
+    {
+      "id": "paths-outline",
+      "type": "line",
+      "source": "ayagoz",
+      "source-layer": "roads",
+      "filter": [
+        "in",
+        [
+          "get",
+          "class"
+        ],
+        [
+          "literal",
+          [
+            "footway",
+            "cycleway",
+            "path",
+            "pedestrian",
+            "steps",
+            "track",
+            "bridleway"
+          ]
+        ]
+      ],
+      "layout": {
+        "line-join": "round",
+        "line-cap": "round"
+      },
+      "paint": {
+        "line-color": "#d2d0c8",
+        "line-width": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          10,
+          2.4,
+          14,
+          3.1,
+          16,
+          3.8,
+          19,
+          5.4
+        ]
+      }
+    },
+    {
+      "id": "paths",
+      "type": "line",
+      "source": "ayagoz",
+      "source-layer": "roads",
+      "filter": [
+        "in",
+        [
+          "get",
+          "class"
+        ],
+        [
+          "literal",
+          [
+            "footway",
+            "cycleway",
+            "path",
+            "pedestrian",
+            "steps",
+            "track",
+            "bridleway"
+          ]
+        ]
+      ],
+      "layout": {
+        "line-join": "round",
+        "line-cap": "round"
+      },
+      "paint": {
+        "line-color": "#eeeadd",
+        "line-width": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          10,
+          0.4,
+          14,
+          1.1,
+          16,
+          1.8,
+          19,
+          3.4
+        ]
+      }
+    },
+    {
+      "id": "streets-outline",
+      "type": "line",
+      "source": "ayagoz",
+      "source-layer": "roads",
+      "filter": [
+        "in",
+        [
+          "get",
+          "class"
+        ],
+        [
+          "literal",
+          [
+            "service",
+            "living_street",
+            "residential",
+            "unclassified",
+            "road"
+          ]
+        ]
+      ],
+      "layout": {
+        "line-join": "round",
+        "line-cap": "round"
+      },
+      "paint": {
+        "line-color": "#c9c9c5",
+        "line-width": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          10,
+          2.8,
+          14,
+          5.5,
+          16,
+          7.3,
+          19,
+          12
+        ]
+      }
+    },
+    {
+      "id": "streets",
+      "type": "line",
+      "source": "ayagoz",
+      "source-layer": "roads",
+      "filter": [
+        "in",
+        [
+          "get",
+          "class"
+        ],
+        [
+          "literal",
+          [
+            "service",
+            "living_street",
+            "residential",
+            "unclassified",
+            "road"
+          ]
+        ]
+      ],
+      "layout": {
+        "line-join": "round",
+        "line-cap": "round"
+      },
+      "paint": {
+        "line-color": "#ffffff",
+        "line-width": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          10,
+          0.8,
+          14,
+          3.5,
+          16,
+          5.3,
+          19,
+          10
+        ]
+      }
+    },
+    {
+      "id": "secondary-roads-outline",
+      "type": "line",
+      "source": "ayagoz",
+      "source-layer": "roads",
+      "filter": [
+        "in",
+        [
+          "get",
+          "class"
+        ],
+        [
+          "literal",
+          [
+            "tertiary",
+            "tertiary_link",
+            "secondary",
+            "secondary_link"
+          ]
+        ]
+      ],
+      "layout": {
+        "line-join": "round",
+        "line-cap": "round"
+      },
+      "paint": {
+        "line-color": "#d1b77c",
+        "line-width": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          10,
+          3.5,
+          14,
+          7,
+          16,
+          9,
+          19,
+          16
+        ]
+      }
+    },
+    {
+      "id": "secondary-roads",
+      "type": "line",
+      "source": "ayagoz",
+      "source-layer": "roads",
+      "filter": [
+        "in",
+        [
+          "get",
+          "class"
+        ],
+        [
+          "literal",
+          [
+            "tertiary",
+            "tertiary_link",
+            "secondary",
+            "secondary_link"
+          ]
+        ]
+      ],
+      "layout": {
+        "line-join": "round",
+        "line-cap": "round"
+      },
+      "paint": {
+        "line-color": "#ffe7ad",
+        "line-width": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          10,
+          1.5,
+          14,
+          5,
+          16,
+          7,
+          19,
+          14
+        ]
+      }
+    },
+    {
+      "id": "main-roads-outline",
+      "type": "line",
+      "source": "ayagoz",
+      "source-layer": "roads",
+      "filter": [
+        "in",
+        [
+          "get",
+          "class"
+        ],
+        [
+          "literal",
+          [
+            "primary",
+            "primary_link",
+            "trunk",
+            "trunk_link",
+            "motorway",
+            "motorway_link"
+          ]
+        ]
+      ],
+      "layout": {
+        "line-join": "round",
+        "line-cap": "round"
+      },
+      "paint": {
+        "line-color": "#cda369",
+        "line-width": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          10,
+          4,
+          14,
+          8.5,
+          16,
+          11,
+          19,
+          20
+        ]
+      }
+    },
+    {
+      "id": "main-roads",
+      "type": "line",
+      "source": "ayagoz",
+      "source-layer": "roads",
+      "filter": [
+        "in",
+        [
+          "get",
+          "class"
+        ],
+        [
+          "literal",
+          [
+            "primary",
+            "primary_link",
+            "trunk",
+            "trunk_link",
+            "motorway",
+            "motorway_link"
+          ]
+        ]
+      ],
+      "layout": {
+        "line-join": "round",
+        "line-cap": "round"
+      },
+      "paint": {
+        "line-color": "#ffd08c",
+        "line-width": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          10,
+          2,
+          14,
+          6.5,
+          16,
+          9,
+          19,
+          18
+        ]
+      }
+    },
+    {
+      "id": "poi-dots",
+      "type": "circle",
+      "source": "ayagoz",
+      "source-layer": "pois",
+      "minzoom": 14,
+      "paint": {
+        "circle-color": [
+          "match",
+          [
+            "coalesce",
+            [
+              "get",
+              "amenity"
+            ],
+            [
+              "get",
+              "shop"
+            ],
+            [
+              "get",
+              "healthcare"
+            ],
+            [
+              "get",
+              "industrial"
+            ],
+            [
+              "get",
+              "office"
+            ],
+            [
+              "get",
+              "tourism"
+            ],
+            [
+              "get",
+              "leisure"
+            ],
+            "other"
+          ],
+          [
+            "school",
+            "kindergarten",
+            "college",
+            "university",
+            "library"
+          ],
+          "#3b7fd4",
+          [
+            "hospital",
+            "clinic",
+            "doctors",
+            "dentist",
+            "pharmacy"
+          ],
+          "#db5c67",
+          [
+            "fuel",
+            "car_wash",
+            "parking",
+            "bus_station",
+            "taxi"
+          ],
+          "#b183cf",
+          [
+            "park",
+            "sports_centre",
+            "stadium",
+            "playground"
+          ],
+          "#4b9b61",
+          [
+            "industrial",
+            "works",
+            "warehouse"
+          ],
+          "#897d70",
+          "#da954f"
+        ],
+        "circle-radius": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          14,
+          2,
+          16,
+          4,
+          19,
+          6
+        ],
+        "circle-stroke-width": 1.2,
+        "circle-stroke-color": "#ffffff"
+      }
+    },
+    {
+      "id": "road-names",
+      "type": "symbol",
+      "source": "ayagoz",
+      "source-layer": "roads",
+      "minzoom": 13,
+      "filter": [
+        "any",
+        [
+          "has",
+          "name"
+        ],
+        [
+          "has",
+          "name_ru"
+        ],
+        [
+          "has",
+          "name_kk"
+        ],
+        [
+          "has",
+          "ref"
+        ]
+      ],
+      "layout": {
+        "symbol-placement": "line",
+        "symbol-spacing": 220,
+        "text-field": [
+          "coalesce",
+          [
+            "get",
+            "name_ru"
+          ],
+          [
+            "get",
+            "name"
+          ],
+          [
+            "get",
+            "name_kk"
+          ],
+          [
+            "get",
+            "ref"
+          ],
+          ""
+        ],
+        "text-font": [
+          "Open Sans Regular"
+        ],
+        "text-size": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          13,
+          10,
+          16,
+          13,
+          19,
+          15
+        ]
+      },
+      "paint": {
+        "text-color": "#52606a",
+        "text-halo-color": "#ffffff",
+        "text-halo-width": 1.8
+      }
+    },
+    {
+      "id": "place-names",
+      "type": "symbol",
+      "source": "ayagoz",
+      "source-layer": "places",
+      "layout": {
+        "text-field": [
+          "coalesce",
+          [
+            "get",
+            "name_ru"
+          ],
+          [
+            "get",
+            "name"
+          ],
+          [
+            "get",
+            "name_kk"
+          ],
+          ""
+        ],
+        "text-font": [
+          "Open Sans Regular"
+        ],
+        "text-size": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          10,
+          13,
+          15,
+          17,
+          18,
+          20
+        ]
+      },
+      "paint": {
+        "text-color": "#325266",
+        "text-halo-color": "#ffffff",
+        "text-halo-width": 1.8
+      }
+    },
+    {
+      "id": "poi-names",
+      "type": "symbol",
+      "source": "ayagoz",
+      "source-layer": "pois",
+      "minzoom": 15,
+      "filter": [
+        "any",
+        [
+          "has",
+          "name"
+        ],
+        [
+          "has",
+          "name_ru"
+        ],
+        [
+          "has",
+          "name_kk"
+        ]
+      ],
+      "layout": {
+        "text-field": [
+          "coalesce",
+          [
+            "get",
+            "name_ru"
+          ],
+          [
+            "get",
+            "name"
+          ],
+          [
+            "get",
+            "name_kk"
+          ],
+          ""
+        ],
+        "text-font": [
+          "Open Sans Regular"
+        ],
+        "text-size": 11,
+        "text-anchor": "top",
+        "text-offset": [
+          0,
+          0.8
+        ],
+        "text-max-width": 12
+      },
+      "paint": {
+        "text-color": "#45545d",
+        "text-halo-color": "#ffffff",
+        "text-halo-width": 1.8
+      }
+    },
+    {
+      "id": "house-numbers",
+      "type": "symbol",
+      "source": "ayagoz",
+      "source-layer": "addresses",
+      "minzoom": 16,
+      "filter": [
+        "has",
+        "housenumber"
+      ],
+      "layout": {
+        "text-field": [
+          "get",
+          "housenumber"
+        ],
+        "text-font": [
+          "Open Sans Regular"
+        ],
+        "text-size": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          16,
+          10,
+          19,
+          14
+        ],
+        "text-allow-overlap": false
+      },
+      "paint": {
+        "text-color": "#514b44",
+        "text-halo-color": "#ffffff",
+        "text-halo-width": 1.8
+      }
+    }
+  ]
+}

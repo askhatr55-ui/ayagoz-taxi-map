@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Аягоз — карта такси</title>
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<style>
+* {
+  box-sizing: border-box;
+}
+html, body, #map {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  font-family: system-ui, Arial, sans-serif;
+}
+#map {
+  position: absolute;
+  inset: 0;
+}
+.panel {
+  position: absolute;
+  z-index: 3;
+  top: 12px;
+  left: 12px;
+  width: min(360px, calc(100% - 78px));
+  padding: 13px;
+  background: white;
+  border-radius: 13px;
+  box-shadow: 0 3px 16px #0002;
+}
+.header {
+  font-weight: 750;
+  color: #21454c;
+  margin-bottom: 9px;
+}
+.search {
+  display: flex;
+  gap: 5px;
+}
+.search input {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #ccd5d8;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 14px;
+}
+button {
+  cursor: pointer;
+  border: 0;
+  border-radius: 8px;
+  padding: 9px;
+  background: #edf4f4;
+  color: #245861;
+  font-weight: 600;
+}
+.actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 9px;
+  flex-wrap: wrap;
+}
+.actions button {
+  flex: 1;
+  min-width: 85px;
+  font-size: 12px;
+}
+button.active {
+  background: #18868d;
+  color: white;
+}
+#results {
+  max-height: 220px;
+  overflow-y: auto;
+}
+.result {
+  width: 100%;
+  display: block;
+  text-align: left;
+  background: white;
+  border-bottom: 1px solid #e5ebec;
+  border-radius: 0;
+}
+.result small {
+  display: block;
+  color: #66777b;
+  margin-top: 3px;
+}
+#info {
+  color: #68797c;
+  font-size: 11px;
+  margin-top: 8px;
+}
+#status {
+  position: absolute;
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%);
+  z-index: 4;
+  background: #1d4750;
+  color: white;
+  padding: 9px 14px;
+  border-radius: 10px;
+  font-size: 12px;
+  max-width: 90%;
+  text-align: center;
+}
+@media(max-width:500px) {
+  .panel {
+    top: 7px;
+    left: 7px;
+    width: calc(100% - 66px);
+    padding: 9px;
+  }
+}
+</style>
+</head>
+<body>
+<div id="map"></div>
+
+<div class="panel">
+  <div class="header">🚕 Аягоз — карта такси</div>
+  <div class="search">
+    <input id="query" placeholder="Поиск улицы и дома" autocomplete="off">
+    <button id="clear">✕</button>
+  </div>
+  <div id="results"></div>
+  <div class="actions">
+    <button id="pickup">📍 Откуда</button>
+    <button id="dropoff">🏁 Куда</button>
+    <button id="locate">◎ Я здесь</button>
+  </div>
+  <div id="info">
+    Номера домов видны при приближении, если они есть в OSM.
+  </div>
+</div>
+
+<div id="status">Загрузка карты…</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var status = document.getElementById('status');
+  var statusTimer;
+
+  function message(text, autoHide) {
+    status.textContent = text;
+    status.style.display = 'block';
+    clearTimeout(statusTimer);
+    if (autoHide) {
+      statusTimer = setTimeout(function () {
+        status.style.display = 'none';
+      }, 4500);
+    }
+  }
+
+  if (!window.maplibregl) {
+    message('Не загрузилась библиотека MapLibre. Проверь интернет.');
+    return;
+  }
+
+  var hadMapError = false;
+  var loadingTimeout = setTimeout(function () { message('Загрузка задерживается. Сервер Render может запускаться; обнови страницу через минуту.', false); }, 75000);
+  var map = new maplibregl.Map({
+    container: 'map',
+    style: '/style.json',
+    center: [80.4366, 47.96512],
+    zoom: 13,
+    minZoom: 11,
+    maxZoom: 19
+  });
+
+  // Обновляем размеры canvas при изменении размера контейнера.
+  if (window.ResizeObserver) {
+    new ResizeObserver(function () { map.resize(); })
+      .observe(document.getElementById('map'));
+  }
+
+  map.addControl(
+    new maplibregl.NavigationControl(),
+    'top-right'
+  );
+
+  map.on('load', function () {
+    clearTimeout(loadingTimeout);
+    if (!hadMapError) message('Карта загружена', true);
+  });
+
+  map.on('error', function (event) {
+    hadMapError = true;
+    clearTimeout(loadingTimeout);
+    console.error('Ошибка MapLibre:', event.error);
+    message(
+      'Ошибка загрузки карты или тайлов. Проверь /health и консоль браузера.',
+      false
+    );
+  });
+
+  var mode = '';
+  var markers = {};
+  var pickup = document.getElementById('pickup');
+  var dropoff = document.getElementById('dropoff');
+
+  function setMode(next) {
+    mode = mode === next ? '' : next;
+    pickup.classList.toggle('active', mode === 'pickup');
+    dropoff.classList.toggle('active', mode === 'dropoff');
+
+    if (mode) {
+      message('Нажми на карту, чтобы выбрать точку', true);
+    }
+  }
+
+  pickup.onclick = function () {
+    setMode('pickup');
+  };
+
+  dropoff.onclick = function () {
+    setMode('dropoff');
+  };
+
+  function pin(coords, which) {
+    if (markers[which]) markers[which].remove();
+
+    var element = document.createElement('div');
+
+    element.style.cssText =
+      'width:23px;height:23px;border:3px solid white;' +
+      'border-radius:50%;background:' +
+      (which === 'pickup' ? '#0e998c' : '#e97943') +
+      ';box-shadow:0 2px 6px #0006';
+
+    markers[which] = new maplibregl.Marker({
+      element: element
+    }).setLngLat(coords).addTo(map);
+
+    message(
+      which === 'pickup'
+        ? 'Место посадки выбрано'
+        : 'Место назначения выбрано',
+      true
+    );
+  }
+
+  map.on('click', function (event) {
+    if (mode) {
+      var selected = mode;
+
+      pin(
+        [event.lngLat.lng, event.lngLat.lat],
+        selected
+      );
+
+      setMode(selected);
+      return;
+    }
+
+    var layerNames = [
+      'house-numbers',
+      'poi-dots',
+      'poi-names',
+      'buildings',
+      'road-names'
+    ].filter(function (id) {
+      return !!map.getLayer(id);
+    });
+
+    var f = map.queryRenderedFeatures(
+      event.point,
+      { layers: layerNames }
+    )[0];
+
+    if (!f) return;
+
+    var p = f.properties || {};
+    var parts = [];
+
+    if (p.street) parts.push(p.street);
+    if (p.housenumber) {
+      parts.push('дом ' + p.housenumber);
+    }
+
+    var title =
+      p.name_ru ||
+      p.name ||
+      p.name_kk ||
+      parts.join(', ') ||
+      'Объект на карте';
+
+    var content = document.createElement('div');
+    var strong = document.createElement('strong');
+
+    strong.textContent = title;
+    content.appendChild(strong);
+
+    if (parts.length) {
+      var details = document.createElement('div');
+      details.textContent = parts.join(', ');
+      content.appendChild(details);
+    }
+
+    new maplibregl.Popup({
+      maxWidth: '280px'
+    })
+      .setLngLat(event.lngLat)
+      .setDOMContent(content)
+      .addTo(map);
+  });
+
+  document.getElementById('locate').onclick = function () {
+    if (!navigator.geolocation) {
+      message('Геолокация недоступна', true);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      function (position) {
+        var coordinates = [
+          position.coords.longitude,
+          position.coords.latitude
+        ];
+
+        map.flyTo({
+          center: coordinates,
+          zoom: 16
+        });
+
+        message('Местоположение определено', true);
+      },
+      function () {
+        message('Не получилось определить местоположение', true);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 12000
+      }
+    );
+  };
+
+  map.on('moveend', function () {
+    var c = map.getCenter();
+    if (c.lng < 80.30 || c.lng > 80.55 || c.lat < 47.90 || c.lat > 48.05) message('За пределами подготовленной карты Аягоза. Вернись к городу.', false);
+  });
+
+  var input = document.getElementById('query');
+  var results = document.getElementById('results');
+  var index = [];
+
+  function normalize(value) {
+    return String(value || '')
+      .toLocaleLowerCase('ru')
+      .replace(/ё/g, 'е')
+      .replace(/[,.-]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function search() {
+    results.replaceChildren();
+
+    var q = normalize(input.value);
+    if (q.length < 2) return;
+
+    var words = q.split(' ');
+
+    var matches = index.filter(function (item) {
+      var label = normalize(item.label);
+
+      return words.every(function (word) {
+        return label.includes(word);
+      });
+    }).slice(0, 12);
+
+    if (!matches.length) {
+      results.textContent = 'Совпадения не найдены в базе адресов';
+      return;
+    }
+
+    matches.forEach(function (item) {
+      var button = document.createElement('button');
+      button.className = 'result';
+      button.textContent = item.label;
+
+      var subtitle = document.createElement('small');
+
+      subtitle.textContent =
+        item.kind === 'address'
+          ? 'Адрес'
+          : item.kind === 'street'
+          ? 'Улица'
+          : 'Место';
+
+      button.appendChild(subtitle);
+
+      button.onclick = function () {
+        input.value = item.label;
+        results.replaceChildren();
+
+        map.flyTo({
+          center: [item.lon, item.lat],
+          zoom: item.kind === 'address' ? 17 : 15
+        });
+
+        new maplibregl.Popup()
+          .setLngLat([item.lon, item.lat])
+          .setText(item.label)
+          .addTo(map);
+      };
+
+      results.appendChild(button);
+    });
+  }
+
+  input.addEventListener('input', search);
+
+  document.getElementById('clear').onclick = function () {
+    input.value = '';
+    results.replaceChildren();
+    input.focus();
+  };
+
+  fetch('/search-index.json')
+    .then(function (r) {
+      if (!r.ok) throw Error('No search index');
+      return r.json();
+    })
+    .then(function (data) {
+      index = Array.isArray(data) ? data : [];
+      if (!index.length) { input.disabled = true; input.placeholder = 'База поиска ещё не подключена'; }
+
+      document.getElementById('info').textContent =
+        'В индексе OSM: ' + index.length +
+        ' адресов и улиц. Номера домов доступны с масштаба 16.';
+    })
+    .catch(function () {
+      document.getElementById('info').textContent =
+        'База поиска недоступна. Карта продолжает работать.';
+    });
+})();
+</script>
+</body>
+</html>

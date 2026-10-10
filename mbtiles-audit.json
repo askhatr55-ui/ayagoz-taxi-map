@@ -1,0 +1,504 @@
+{
+  "integrity": "ok",
+  "sha256": "4d3ffc8cdceecc4fea2b4848abeb561c63a5f0ee3deaeead7c57eecf80e1a011",
+  "perZoom": {
+    "10": {
+      "places": 18
+    },
+    "11": {
+      "places": 10,
+      "roads": 1704,
+      "water": 16,
+      "waterways": 38,
+      "railways": 125
+    },
+    "12": {
+      "landuse": 56,
+      "roads": 1852,
+      "water": 10,
+      "waterways": 47,
+      "railways": 138,
+      "places": 8
+    },
+    "13": {
+      "roads": 1929,
+      "waterways": 51,
+      "buildings": 13099,
+      "landuse": 100,
+      "places": 4,
+      "railways": 158,
+      "water": 3
+    },
+    "14": {
+      "roads": 2076,
+      "waterways": 85,
+      "buildings": 13151,
+      "places": 4,
+      "landuse": 118,
+      "water": 5,
+      "pois": 358,
+      "railways": 201
+    },
+    "15": {
+      "roads": 2464,
+      "waterways": 140,
+      "places": 4,
+      "landuse": 125,
+      "buildings": 13527,
+      "water": 6,
+      "pois": 356,
+      "addresses": 4558,
+      "railways": 226
+    },
+    "16": {
+      "roads": 3163,
+      "waterways": 252,
+      "places": 4,
+      "landuse": 171,
+      "buildings": 14072,
+      "pois": 348,
+      "water": 8,
+      "addresses": 4542,
+      "railways": 318
+    }
+  },
+  "empty": [],
+  "probes": [
+    {
+      "area": "center",
+      "z": 10,
+      "x": 740,
+      "y": 356,
+      "layers": {
+        "places": 7
+      },
+      "sha256": "4b76c30e36c4dd658a56a2cd65eaf25010748ea60f507c0e53fc1285d146f542"
+    },
+    {
+      "area": "center",
+      "z": 11,
+      "x": 1481,
+      "y": 712,
+      "layers": {
+        "places": 3,
+        "railways": 109,
+        "roads": 1517,
+        "water": 3,
+        "waterways": 21
+      },
+      "sha256": "dc4b0e97a6a9777ce7f50397f85922331eaf42ea41e867891c625e0c7b5bbbff"
+    },
+    {
+      "area": "center",
+      "z": 12,
+      "x": 2963,
+      "y": 1424,
+      "layers": {
+        "landuse": 38,
+        "places": 2,
+        "railways": 93,
+        "roads": 1130,
+        "waterways": 15
+      },
+      "sha256": "a9f0ff9152c09aa1d325f9864c0e15b9024eb27d8eec68c9c0666c8aab6fff82"
+    },
+    {
+      "area": "center",
+      "z": 13,
+      "x": 5926,
+      "y": 2848,
+      "layers": {
+        "buildings": 5773,
+        "landuse": 49,
+        "places": 1,
+        "railways": 45,
+        "roads": 746,
+        "waterways": 5
+      },
+      "sha256": "4c4543a8643ec3f13a0f039f0837746a57cfa312f48bc05c7536d74910d1ea0d"
+    },
+    {
+      "area": "center",
+      "z": 14,
+      "x": 11852,
+      "y": 5697,
+      "layers": {
+        "buildings": 3053,
+        "landuse": 31,
+        "places": 1,
+        "pois": 189,
+        "railways": 7,
+        "roads": 359
+      },
+      "sha256": "18e7ca2dba20266f2de0271519d4ed04b796133c48d5b8536ea2a2db78656148"
+    },
+    {
+      "area": "center",
+      "z": 15,
+      "x": 23705,
+      "y": 11395,
+      "layers": {
+        "addresses": 220,
+        "buildings": 619,
+        "landuse": 15,
+        "places": 1,
+        "pois": 92,
+        "roads": 162
+      },
+      "sha256": "2a688ddd2bde3fe6ffbc664951d732956054545917476733e1dc3c8baf5e8ee1"
+    },
+    {
+      "area": "center",
+      "z": 16,
+      "x": 47411,
+      "y": 22790,
+      "layers": {
+        "addresses": 44,
+        "buildings": 160,
+        "landuse": 3,
+        "places": 1,
+        "pois": 12,
+        "roads": 43
+      },
+      "sha256": "85cc5e626590d9473c4a4b0aac42b36455b03d3afcdba74558f224411d365d4d"
+    },
+    {
+      "area": "west",
+      "z": 10,
+      "x": 740,
+      "y": 356,
+      "layers": {
+        "places": 7
+      },
+      "sha256": "4b76c30e36c4dd658a56a2cd65eaf25010748ea60f507c0e53fc1285d146f542"
+    },
+    {
+      "area": "west",
+      "z": 11,
+      "x": 1481,
+      "y": 712,
+      "layers": {
+        "places": 3,
+        "railways": 109,
+        "roads": 1517,
+        "water": 3,
+        "waterways": 21
+      },
+      "sha256": "dc4b0e97a6a9777ce7f50397f85922331eaf42ea41e867891c625e0c7b5bbbff"
+    },
+    {
+      "area": "west",
+      "z": 12,
+      "x": 2962,
+      "y": 1424,
+      "layers": {
+        "landuse": 15,
+        "places": 1,
+        "railways": 9,
+        "roads": 468,
+        "water": 3,
+        "waterways": 9
+      },
+      "sha256": "e25bac05cb8407a7214b48f79e98bc4318d275b3e8d08bb64f8d5ccc54e6b995"
+    },
+    {
+      "area": "west",
+      "z": 13,
+      "x": 5925,
+      "y": 2848,
+      "layers": {
+        "buildings": 1143,
+        "landuse": 9,
+        "railways": 7,
+        "roads": 205
+      },
+      "sha256": "7628e0eaf08b9b2d1f4812bdb79cf6c849abac1c86bbda12b8a294f51f5531d2"
+    },
+    {
+      "area": "west",
+      "z": 14,
+      "x": 11851,
+      "y": 5697,
+      "layers": {
+        "buildings": 1059,
+        "landuse": 8,
+        "pois": 32,
+        "railways": 7,
+        "roads": 152
+      },
+      "sha256": "aa88956a93fd332004ab181dfab9c84361c3e4231d406cefd07dcbd58b82dd1c"
+    },
+    {
+      "area": "west",
+      "z": 15,
+      "x": 23702,
+      "y": 11395,
+      "layers": {
+        "addresses": 82,
+        "buildings": 265,
+        "landuse": 1,
+        "railways": 1,
+        "roads": 43
+      },
+      "sha256": "0b0ca74ce56b85a7d9fb1c5664279706847c2ff08cc1086c6db16f9d558e1a93"
+    },
+    {
+      "area": "west",
+      "z": 16,
+      "x": 47405,
+      "y": 22790,
+      "layers": {
+        "addresses": 6,
+        "buildings": 40,
+        "landuse": 1,
+        "railways": 1,
+        "roads": 16
+      },
+      "sha256": "ffeebc1e9bc7fb5de42c93aa82551bf5c7ad157801e04925fa13a76c39c98b82"
+    },
+    {
+      "area": "east",
+      "z": 10,
+      "x": 740,
+      "y": 356,
+      "layers": {
+        "places": 7
+      },
+      "sha256": "4b76c30e36c4dd658a56a2cd65eaf25010748ea60f507c0e53fc1285d146f542"
+    },
+    {
+      "area": "east",
+      "z": 11,
+      "x": 1481,
+      "y": 712,
+      "layers": {
+        "places": 3,
+        "railways": 109,
+        "roads": 1517,
+        "water": 3,
+        "waterways": 21
+      },
+      "sha256": "dc4b0e97a6a9777ce7f50397f85922331eaf42ea41e867891c625e0c7b5bbbff"
+    },
+    {
+      "area": "east",
+      "z": 12,
+      "x": 2963,
+      "y": 1424,
+      "layers": {
+        "landuse": 38,
+        "places": 2,
+        "railways": 93,
+        "roads": 1130,
+        "waterways": 15
+      },
+      "sha256": "a9f0ff9152c09aa1d325f9864c0e15b9024eb27d8eec68c9c0666c8aab6fff82"
+    },
+    {
+      "area": "east",
+      "z": 13,
+      "x": 5927,
+      "y": 2848,
+      "layers": {
+        "waterways": 1
+      },
+      "sha256": "a9a2cce964ac0b2779ec24255ae0cefde4027e286b92fff5574adda92ed93528"
+    },
+    {
+      "area": "east",
+      "z": 14,
+      "x": 11854,
+      "y": 5697,
+      "layers": {},
+      "sha256": null
+    },
+    {
+      "area": "east",
+      "z": 15,
+      "x": 23708,
+      "y": 11395,
+      "layers": {},
+      "sha256": null
+    },
+    {
+      "area": "east",
+      "z": 16,
+      "x": 47417,
+      "y": 22790,
+      "layers": {},
+      "sha256": null
+    },
+    {
+      "area": "north",
+      "z": 10,
+      "x": 740,
+      "y": 355,
+      "layers": {
+        "places": 3
+      },
+      "sha256": "698eaff6c5f73759bc16c923c2f887a2cfcf86ac32d46a56ce1ca4e952d4ee0f"
+    },
+    {
+      "area": "north",
+      "z": 11,
+      "x": 1481,
+      "y": 711,
+      "layers": {
+        "places": 3,
+        "railways": 16,
+        "roads": 63,
+        "waterways": 6
+      },
+      "sha256": "9f41d93fcb6f1cda2da1d7da7f420f0816ae7041a320fc9e4e0395acbfddd997"
+    },
+    {
+      "area": "north",
+      "z": 12,
+      "x": 2963,
+      "y": 1423,
+      "layers": {
+        "railways": 11,
+        "roads": 23,
+        "waterways": 3
+      },
+      "sha256": "1ad684a6f87a2403b70c16910c8583198e318767c4368aa1519af2390b0a5f22"
+    },
+    {
+      "area": "north",
+      "z": 13,
+      "x": 5926,
+      "y": 2847,
+      "layers": {
+        "buildings": 6,
+        "railways": 8,
+        "roads": 14,
+        "waterways": 3
+      },
+      "sha256": "c909283d4a05cc031c576da6eef168c614afa8ec90e1d86baab3397581b41e45"
+    },
+    {
+      "area": "north",
+      "z": 14,
+      "x": 11852,
+      "y": 5695,
+      "layers": {
+        "buildings": 3,
+        "pois": 3,
+        "railways": 6,
+        "roads": 7,
+        "waterways": 1
+      },
+      "sha256": "c110747bf8475bb7329dfc03153072db10409075c125e0eea2a998a307417f26"
+    },
+    {
+      "area": "north",
+      "z": 15,
+      "x": 23705,
+      "y": 11391,
+      "layers": {
+        "railways": 4,
+        "waterways": 1
+      },
+      "sha256": "608da34326162d21123645289b9ebb9b257083ca3b3a6be4e6e1e456b13ff06d"
+    },
+    {
+      "area": "north",
+      "z": 16,
+      "x": 47411,
+      "y": 22783,
+      "layers": {},
+      "sha256": null
+    },
+    {
+      "area": "south",
+      "z": 10,
+      "x": 740,
+      "y": 356,
+      "layers": {
+        "places": 7
+      },
+      "sha256": "4b76c30e36c4dd658a56a2cd65eaf25010748ea60f507c0e53fc1285d146f542"
+    },
+    {
+      "area": "south",
+      "z": 11,
+      "x": 1481,
+      "y": 712,
+      "layers": {
+        "places": 3,
+        "railways": 109,
+        "roads": 1517,
+        "water": 3,
+        "waterways": 21
+      },
+      "sha256": "dc4b0e97a6a9777ce7f50397f85922331eaf42ea41e867891c625e0c7b5bbbff"
+    },
+    {
+      "area": "south",
+      "z": 12,
+      "x": 2963,
+      "y": 1424,
+      "layers": {
+        "landuse": 38,
+        "places": 2,
+        "railways": 93,
+        "roads": 1130,
+        "waterways": 15
+      },
+      "sha256": "a9f0ff9152c09aa1d325f9864c0e15b9024eb27d8eec68c9c0666c8aab6fff82"
+    },
+    {
+      "area": "south",
+      "z": 13,
+      "x": 5926,
+      "y": 2849,
+      "layers": {
+        "buildings": 3585,
+        "landuse": 26,
+        "railways": 67,
+        "roads": 414,
+        "waterways": 14
+      },
+      "sha256": "2e4bdbb885dacb5c1e4576af7a2d7143b29ae858117e4ae5aa6a367516d4f640"
+    },
+    {
+      "area": "south",
+      "z": 14,
+      "x": 11852,
+      "y": 5699,
+      "layers": {
+        "buildings": 157,
+        "landuse": 4,
+        "pois": 6,
+        "railways": 4,
+        "roads": 55,
+        "waterways": 2
+      },
+      "sha256": "0f5ea4afb93806cd8f5e1ceb4f97a7776cef62f410c3eaffaa6eda7ac432d011"
+    },
+    {
+      "area": "south",
+      "z": 15,
+      "x": 23705,
+      "y": 11398,
+      "layers": {
+        "buildings": 7,
+        "landuse": 3,
+        "railways": 3,
+        "roads": 11,
+        "waterways": 2
+      },
+      "sha256": "c1ebee30fc310efb629f9d882c1ab478254ab7c44ecf3cd004cee0c91949da3f"
+    },
+    {
+      "area": "south",
+      "z": 16,
+      "x": 47411,
+      "y": 22797,
+      "layers": {
+        "waterways": 1
+      },
+      "sha256": "ae91f1ada47caaf352177ea123318fa117f46e87aa15331c20c75b6de46329ef"
+    }
+  ]
+}

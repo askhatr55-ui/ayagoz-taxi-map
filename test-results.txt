@@ -1,0 +1,13 @@
+ayagoz-map-3.1.1 map=ayagoz-v3.mbtiles sha256=4d3ffc8cdceecc4fea2b4848abeb561c63a5f0ee3deaeead7c57eecf80e1a011 commit=local/unknown port=58782
+Verified all 1154 real tile payloads
+ayagoz-map-3.1.1 map=ayagoz-v3.mbtiles sha256=4a4409b9cf3e3b5ac9b910d8e188c5d483cf9292466c958ad4c83624ce2e24d4 commit=local/unknown port=60958
+✔ real MBTiles: every stored XYZ tile returns correct compressed bytes; diagnostics and cache (1017.1499ms)
+✔ raw PBF and invalid optional address file do not break the map (266.1173ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1451.8536
