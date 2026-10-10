@@ -681,7 +681,7 @@
           ""
         ],
         "text-font": [
-          "Open Sans Regular"
+          "Noto Sans Regular"
         ],
         "text-size": [
           "interpolate",
@@ -728,7 +728,7 @@
           ""
         ],
         "text-font": [
-          "Open Sans Regular"
+          "Noto Sans Regular"
         ],
         "text-size": [
           "interpolate",
@@ -791,7 +791,7 @@
           ""
         ],
         "text-font": [
-          "Open Sans Regular"
+          "Noto Sans Regular"
         ],
         "text-size": 11,
         "text-anchor": "top",
@@ -823,7 +823,7 @@
           "housenumber"
         ],
         "text-font": [
-          "Open Sans Regular"
+          "Noto Sans Regular"
         ],
         "text-size": [
           "interpolate",
