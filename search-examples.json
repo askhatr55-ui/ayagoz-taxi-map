@@ -1,0 +1,318 @@
+{
+  "addresses": [
+    {
+      "label": "2 мектеп — Гагарин, 20",
+      "kind": "address",
+      "lon": 80.4472979,
+      "lat": 47.9613181,
+      "osmType": "way",
+      "osmId": 468038251,
+      "coordinateType": "point_inside_polygon",
+      "aliases": [
+        "2 мектеп"
+      ],
+      "street": "Гагарин",
+      "housenumber": "20",
+      "city": "Аягоз",
+      "category": "",
+      "searchText": "2 мектеп — Гагарин, 20 2 мектеп Гагарин  20"
+    },
+    {
+      "label": "Asyl Print — Дуйсенова, 100",
+      "kind": "address",
+      "lon": 80.4406395,
+      "lat": 47.9617201,
+      "osmType": "node",
+      "osmId": 13690414859,
+      "coordinateType": "osm_point",
+      "aliases": [
+        "Asyl Print"
+      ],
+      "street": "Дуйсенова",
+      "housenumber": "100",
+      "city": "",
+      "category": "advertising_agency",
+      "searchText": "Asyl Print — Дуйсенова, 100 Asyl Print Дуйсенова  100"
+    },
+    {
+      "label": "АО\"ОЭСК\" — Береке көшесі, 1/1",
+      "kind": "address",
+      "lon": 80.4173896,
+      "lat": 47.9741821,
+      "osmType": "way",
+      "osmId": 483030387,
+      "coordinateType": "point_inside_polygon",
+      "aliases": [
+        "АО\"ОЭСК\""
+      ],
+      "street": "Береке көшесі",
+      "housenumber": "1/1",
+      "city": "Аягоз",
+      "category": "",
+      "searchText": "АО\"ОЭСК\" — Береке көшесі, 1/1 АО\"ОЭСК\" Береке көшесі  1/1"
+    },
+    {
+      "label": "Адильбаев, 1",
+      "kind": "address",
+      "lon": 80.4476557,
+      "lat": 47.9771794,
+      "osmType": "way",
+      "osmId": 483081106,
+      "coordinateType": "point_inside_polygon",
+      "aliases": [],
+      "street": "Адильбаев",
+      "housenumber": "1",
+      "city": "Аягоз",
+      "category": "",
+      "searchText": "Адильбаев, 1 Адильбаев  1"
+    },
+    {
+      "label": "Адильбаев, 10",
+      "kind": "address",
+      "lon": 80.4480157,
+      "lat": 47.9784509,
+      "osmType": "way",
+      "osmId": 483081068,
+      "coordinateType": "point_inside_polygon",
+      "aliases": [],
+      "street": "Адильбаев",
+      "housenumber": "10",
+      "city": "Аягоз",
+      "category": "",
+      "searchText": "Адильбаев, 10 Адильбаев  10"
+    }
+  ],
+  "schools": [
+    {
+      "label": "Казахская школа-гимназия им. К.Бозтаева — Танирбергенова, 55А",
+      "kind": "address",
+      "lon": 80.4422469,
+      "lat": 47.9706636,
+      "osmType": "node",
+      "osmId": 12528778365,
+      "coordinateType": "osm_point",
+      "aliases": [
+        "Казахская школа-гимназия им. К.Бозтаева"
+      ],
+      "street": "Танирбергенова",
+      "housenumber": "55А",
+      "city": "",
+      "category": "school",
+      "searchText": "Казахская школа-гимназия им. К.Бозтаева — Танирбергенова, 55А Казахская школа-гимназия им. К.Бозтаева Танирбергенова  55А"
+    },
+    {
+      "label": "Школа номер 3 — Кабанбай, 5/1",
+      "kind": "address",
+      "lon": 80.4228643,
+      "lat": 47.9761173,
+      "osmType": "way",
+      "osmId": 1321521632,
+      "coordinateType": "point_inside_polygon",
+      "aliases": [
+        "Школа номер 3"
+      ],
+      "street": "Кабанбай",
+      "housenumber": "5/1",
+      "city": "Аягоз",
+      "category": "school",
+      "searchText": "Школа номер 3 — Кабанбай, 5/1 Школа номер 3 Кабанбай  5/1"
+    },
+    {
+      "label": "Школа №5 — Байтурсынов, 22",
+      "kind": "address",
+      "lon": 80.4298161,
+      "lat": 47.9537449,
+      "osmType": "way",
+      "osmId": 1307175953,
+      "coordinateType": "point_inside_polygon",
+      "aliases": [
+        "Школа №5",
+        "5 мектеп"
+      ],
+      "street": "Байтурсынов",
+      "housenumber": "22",
+      "city": "Аягоз",
+      "category": "school",
+      "searchText": "Школа №5 — Байтурсынов, 22 Школа №5 5 мектеп Байтурсынов  22"
+    },
+    {
+      "label": "Школа №6 — Кудерина, 107",
+      "kind": "address",
+      "lon": 80.4371537,
+      "lat": 47.975162,
+      "osmType": "way",
+      "osmId": 483031678,
+      "coordinateType": "point_inside_polygon",
+      "aliases": [
+        "Школа №6",
+        "Шокла №6",
+        "6 мектеп"
+      ],
+      "street": "Кудерина",
+      "housenumber": "107",
+      "city": "Аягоз",
+      "category": "school",
+      "searchText": "Школа №6 — Кудерина, 107 Школа №6 Шокла №6 6 мектеп Кудерина  107"
+    },
+    {
+      "label": "Гимназия",
+      "kind": "place",
+      "lon": 80.4211524,
+      "lat": 47.9653292,
+      "osmType": "way",
+      "osmId": 48704117,
+      "coordinateType": "point_inside_polygon",
+      "aliases": [
+        "Гимназия"
+      ],
+      "street": "Актамберды",
+      "housenumber": "",
+      "city": "",
+      "category": "school",
+      "searchText": "Гимназия Актамберды "
+    }
+  ],
+  "streets": [
+    {
+      "label": "Barshatas - Ayaguz",
+      "kind": "street",
+      "lon": 80.3950081,
+      "lat": 47.9572439,
+      "osmType": "way",
+      "osmId": 1449393280,
+      "coordinateType": "line_midpoint",
+      "aliases": [
+        "Barshatas - Ayaguz"
+      ],
+      "street": "",
+      "housenumber": "",
+      "city": "",
+      "category": "primary",
+      "searchText": "Barshatas - Ayaguz "
+    },
+    {
+      "label": "Barshatas - Ayaguz",
+      "kind": "street",
+      "lon": 80.3915387,
+      "lat": 47.957645,
+      "osmType": "way",
+      "osmId": 1449393281,
+      "coordinateType": "line_midpoint",
+      "aliases": [
+        "Barshatas - Ayaguz"
+      ],
+      "street": "",
+      "housenumber": "",
+      "city": "",
+      "category": "primary",
+      "searchText": "Barshatas - Ayaguz "
+    },
+    {
+      "label": "Адильбаев",
+      "kind": "street",
+      "lon": 80.4475802,
+      "lat": 47.9800766,
+      "osmType": "way",
+      "osmId": 48704146,
+      "coordinateType": "line_midpoint",
+      "aliases": [
+        "Адильбаев"
+      ],
+      "street": "",
+      "housenumber": "",
+      "city": "",
+      "category": "residential",
+      "searchText": "Адильбаев "
+    },
+    {
+      "label": "Аканаева",
+      "kind": "street",
+      "lon": 80.4325498,
+      "lat": 47.9560345,
+      "osmType": "way",
+      "osmId": 48704098,
+      "coordinateType": "line_midpoint",
+      "aliases": [
+        "Аканаева"
+      ],
+      "street": "",
+      "housenumber": "",
+      "city": "",
+      "category": "tertiary",
+      "searchText": "Аканаева "
+    },
+    {
+      "label": "Аканаева",
+      "kind": "street",
+      "lon": 80.4384476,
+      "lat": 47.9659875,
+      "osmType": "way",
+      "osmId": 586791806,
+      "coordinateType": "line_midpoint",
+      "aliases": [
+        "Аканаева"
+      ],
+      "street": "",
+      "housenumber": "",
+      "city": "",
+      "category": "residential",
+      "searchText": "Аканаева "
+    }
+  ],
+  "kazakh": [
+    {
+      "label": "Сункар — бульвар Абая, 18а/1",
+      "kind": "address",
+      "lon": 80.435651,
+      "lat": 47.9658506,
+      "osmType": "way",
+      "osmId": 1331518041,
+      "coordinateType": "point_inside_polygon",
+      "aliases": [
+        "Сункар",
+        "Сұңқар"
+      ],
+      "street": "бульвар Абая",
+      "housenumber": "18а/1",
+      "city": "Аягоз",
+      "category": "doityourself",
+      "searchText": "Сункар — бульвар Абая, 18а/1 Сункар Сұңқар бульвар Абая  18а/1"
+    },
+    {
+      "label": "Школа №5 — Байтурсынов, 22",
+      "kind": "address",
+      "lon": 80.4303286,
+      "lat": 47.9538207,
+      "osmType": "way",
+      "osmId": 468020013,
+      "coordinateType": "point_inside_polygon",
+      "aliases": [
+        "Школа №5",
+        "5 мектеп"
+      ],
+      "street": "Байтурсынов",
+      "housenumber": "22",
+      "city": "Аягоз",
+      "category": "",
+      "searchText": "Школа №5 — Байтурсынов, 22 Школа №5 5 мектеп Байтурсынов  22"
+    },
+    {
+      "label": "Школа №5 — Байтурсынов, 22",
+      "kind": "address",
+      "lon": 80.4298161,
+      "lat": 47.9537449,
+      "osmType": "way",
+      "osmId": 1307175953,
+      "coordinateType": "point_inside_polygon",
+      "aliases": [
+        "Школа №5",
+        "5 мектеп"
+      ],
+      "street": "Байтурсынов",
+      "housenumber": "22",
+      "city": "Аягоз",
+      "category": "school",
+      "searchText": "Школа №5 — Байтурсынов, 22 Школа №5 5 мектеп Байтурсынов  22"
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+ayagoz-map-3.2.0 map=ayagoz-v3.mbtiles sha256=4d3ffc8cdceecc4fea2b4848abeb561c63a5f0ee3deaeead7c57eecf80e1a011 commit=local/unknown port=61832
+Verified real address, street, POI and bilingual API search
+Verified all 1154 real tile payloads
+ayagoz-map-3.2.0 map=ayagoz-v3.mbtiles sha256=4a4409b9cf3e3b5ac9b910d8e188c5d483cf9292466c958ad4c83624ce2e24d4 commit=local/unknown port=61835
+✔ real MBTiles: every stored XYZ tile returns correct compressed bytes; diagnostics and cache (985.0208ms)
+✔ raw PBF and invalid optional address file do not break the map (180.3302ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1354.1997
+{
+  "sourceFile": "fixture.osm",
+  "sourceBytes": 1264,
+  "sourceSha256": "7b102d029e05c997040e25bebb8f73dcd9eca17f6e33f28b91309c3681ae5991",
+  "bounds": [
+    80.3,
+    47.9,
+    80.55,
+    48.05
+  ],
+  "entries": 4,
+  "kinds": {
+    "address": 2,
+    "place": 1,
+    "street": 1
+  },
+  "osmTypes": {
+    "relation": 1,
+    "node": 2,
+    "way": 1
+  },
+  "skipped": {},
+  "attribution": "� OpenStreetMap contributors",
+  "license": "ODbL-1.0",
+  "limitations": [
+    "Coordinates of ways and areas represent objects, not verified pickup entrances.",
+    "Street segments remain separate OSM objects.",
+    "No missing street or house names inferred; associatedStreet relations not used to fill addresses.",
+    "Objects absent from OSM cannot be found."
+  ]
+}
+.
+----------------------------------------------------------------------
+Ran 1 test in 0.019s
+
+OK

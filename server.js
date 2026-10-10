@@ -6,7 +6,7 @@ const crypto = require('node:crypto');
 const zlib = require('node:zlib');
 const initSqlJs = require('sql.js');
 const ROOT = __dirname;
-const SERVER_VERSION = 'ayagoz-map-3.1.1';
+const SERVER_VERSION = 'ayagoz-map-3.2.0';
 const hash = data => crypto.createHash('sha256').update(data).digest('hex');
 
 async function start(options = {}) {
@@ -69,7 +69,7 @@ async function start(options = {}) {
   const counts = {served:0, missing:0, errors:0};
   const recentMissing = [];
   const norm = s => String(s || '').toLocaleLowerCase('ru').replace(/ё/g,'е').replace(/[,.-]/g,' ').replace(/\s+/g,' ').trim();
-  const searchable = search.map(p=>({p,text:norm(p.label)}));
+  const searchable = search.map(p=>({p,text:norm([p.label,p.searchText,...(Array.isArray(p.aliases)?p.aliases:[])].join(' '))}));
   const server = http.createServer((req,res)=>{
     res.setHeader('Access-Control-Allow-Origin','*');
     res.setHeader('X-Content-Type-Options','nosniff');
@@ -109,7 +109,14 @@ async function start(options = {}) {
       if (url.pathname === '/search') {
         const q = norm((url.searchParams.get('q') || '').slice(0,160));
         const words = q.split(' ');
-        json(200,{available:search.length > 0,results:q.length < 2 ? [] : searchable.filter(r=>words.every(w=>r.text.includes(w))).slice(0,12).map(r=>r.p)});return;
+        const seenStreets = new Set();
+        const results = q.length < 2 ? [] : searchable.filter(r=>words.every(w=>r.text.includes(w))).filter(r=>{
+          if (r.p.kind !== 'street') return true;
+          const key = norm(r.p.label);
+          if (seenStreets.has(key)) return false;
+          seenStreets.add(key); return true;
+        }).slice(0,12).map(r=>r.p);
+        json(200,{available:search.length > 0,results});return;
       }
       const match = /^\/tiles\/(\d+)\/(\d+)\/(\d+)\.pbf$/.exec(url.pathname);
       if (match) {

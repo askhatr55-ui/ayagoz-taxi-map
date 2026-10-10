@@ -1,0 +1,31 @@
+{
+  "sourceFile": "kazakhstan-261008.osm.pbf",
+  "sourceBytes": 224123940,
+  "sourceSha256": "ef3d6fd2ff32a53d4363a5588fdf237de244220cdd25ec1f694811f3cd171369",
+  "bounds": [
+    80.3,
+    47.9,
+    80.55,
+    48.05
+  ],
+  "entries": 4761,
+  "kinds": {
+    "address": 4268,
+    "place": 180,
+    "street": 313
+  },
+  "osmTypes": {
+    "way": 4657,
+    "node": 101,
+    "relation": 3
+  },
+  "skipped": {},
+  "attribution": "© OpenStreetMap contributors",
+  "license": "ODbL-1.0",
+  "limitations": [
+    "Coordinates of ways and areas represent objects, not verified pickup entrances.",
+    "Street segments remain separate OSM objects.",
+    "No missing street or house names inferred; associatedStreet relations not used to fill addresses.",
+    "Objects absent from OSM cannot be found."
+  ]
+}

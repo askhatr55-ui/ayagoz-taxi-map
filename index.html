@@ -366,13 +366,20 @@ button.active {
     if (q.length < 2) return;
 
     var words = q.split(' ');
+    var seenStreets = new Set();
 
     var matches = index.filter(function (item) {
-      var label = normalize(item.label);
+      var label = normalize([item.label, item.searchText || ''].concat(item.aliases || []).join(' '));
 
       return words.every(function (word) {
         return label.includes(word);
       });
+    }).filter(function (item) {
+      if (item.kind !== 'street') return true;
+      var key = normalize(item.label);
+      if (seenStreets.has(key)) return false;
+      seenStreets.add(key);
+      return true;
     }).slice(0, 12);
 
     if (!matches.length) {
@@ -405,6 +412,12 @@ button.active {
           zoom: item.kind === 'address' ? 17 : 15
         });
 
+        if (mode) {
+          var selectedMode = mode;
+          pin([item.lon, item.lat], selectedMode);
+          setMode(selectedMode);
+        }
+
         new maplibregl.Popup()
           .setLngLat([item.lon, item.lat])
           .setText(item.label)
@@ -434,7 +447,7 @@ button.active {
 
       document.getElementById('info').textContent =
         'В индексе OSM: ' + index.length +
-        ' адресов и улиц. Номера домов доступны с масштаба 16.';
+        ' объектов. Точку посадки уточни на карте. Номера домов видны с масштаба 16.';
     })
     .catch(function () {
       document.getElementById('info').textContent =
